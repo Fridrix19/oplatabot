@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MetraCode</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <div class="body-scroll" id="scrollarea">
+
+    <!-- ============ HOME VIEW ============ -->
+    <div class="view active" id="view-home">
+
+      <div class="searchbar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Найти игру или подписку
+      </div>
+
+      <div class="hero-banner-wrap">
+        <div class="hero-cta" id="hero-banner" onclick="openTopup('steam')">
+          <div class="hero-cta-icon">
+            <img src="images/steam/logo.jpg" alt="Steam">
+          </div>
+          <div class="hero-cta-body">
+            <div class="hero-cta-eyebrow">Успей пополнить</div>
+            <div class="hero-cta-title">Steam RU / KZ / СНГ</div>
+            <div class="hero-cta-sub"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#66C0F4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>По логину</div>
+          </div>
+          <div class="hero-cta-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">Цифровые подписки</div></div>
+        <div class="hscroll" id="subscriptions"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">Игровой донат</div></div>
+        <div class="hscroll" id="donate-scroll"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div class="section-title">Сервисы пополнения</div></div>
+        <div class="list-card">
+          <div class="list-row" data-catalog="psstore">
+            <div class="list-icon" style="background:#1a1a2e;">🎮</div>
+            <div class="list-name">PS Store</div>
+            <div class="list-discount">-15%</div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="list-row" data-catalog="appleid">
+            <div class="list-icon" style="background:#0e6e0e;">Ⓧ</div>
+            <div class="list-name">Apple ID</div>
+            <div class="list-discount">-15%</div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="list-row" data-catalog="tgstars">
+            <div class="list-icon" style="background:#1c2b3d;">⭐️</div>
+            <div class="list-name">Telegram</div>
+            <div class="list-discount">-11%</div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="list-row" data-catalog="battlenet">
+            <div class="list-icon" style="background:#0f2233;">❄️</div>
+            <div class="list-name">Battle.net</div>
+            <div class="list-discount">-6%</div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="list-row" data-catalog="nintendo">
+            <div class="list-icon" style="background:#E60012;">🎮</div>
+            <div class="list-name">Nintendo</div>
+            <div class="list-discount">-12%</div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:10px;"></div>
+    </div>
+
+    <!-- ============ FAVORITES VIEW ============ -->
+    <div class="view" id="view-fav">
+      <div class="empty">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.9-10-9.3C.5 8.1 2.3 4.5 6 4.1c2-.2 3.6.9 6 3.4 2.4-2.5 4-3.6 6-3.4 3.7.4 5.5 4 4 7.6-2.5 4.4-10 9.3-10 9.3z"/></svg>
+        </div>
+        <div class="empty-title">Пока пусто</div>
+        <div class="empty-sub">Добавляйте игры и подписки в избранное, нажав на сердечко в карточке товара</div>
+        <button class="empty-btn" onclick="hideSubView()">Открыть каталог</button>
+      </div>
+    </div>
+
+    <!-- ============ CART VIEW ============ -->
+    <div class="view" id="view-cart">
+      <div class="detail-topbar" id="cart-topbar">
+        <div class="detail-back" id="cart-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+      </div>
+      <div class="cx-head">
+        <div>
+          <div class="cx-head-title">Корзина</div>
+          <div class="cx-head-sub" id="cx-head-sub"></div>
+        </div>
+      </div>
+
+      <div id="cart-items"></div>
+
+      <div class="cx-promo-toggle" id="cx-promo-toggle" style="display:none;">
+        <span class="promo-toggle-label"><span class="promo-percent-badge">%</span>Есть промокод?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="cx-promo-panel" id="cx-promo-panel" style="display:none;">
+        <div class="field-label" style="margin:0 16px 8px;">Промокод</div>
+        <div class="cart-promo-row" id="cart-promo-row">
+          <input class="field-input" id="cart-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="cart-promo-btn" id="cart-promo-apply-btn">Применить</button>
+        </div>
+        <div class="field-error" id="cart-promo-error">Промокод недействителен</div>
+        <div class="cart-promo-success" id="cart-promo-success"></div>
+      </div>
+      <div class="cx-promo-applied" id="cx-promo-applied" style="display:none;">
+        <span class="promo-percent-badge">%</span>
+        <span class="promo-applied-text">Промокод <b id="cx-promo-code-label"></b> применён</span>
+        <span class="x" id="cx-promo-remove"><svg class="promo-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+      </div>
+
+      <div class="cx-checkout-card" id="cx-checkout-card" style="display:none;">
+        <div id="cx-receipt"></div>
+
+        <div class="cx-checkout-divider"></div>
+
+        <div class="field-label">Способ оплаты</div>
+        <div class="pay-methods" id="cart-pay-methods">
+          <div class="pay-method selected" data-pay="sbp"><img src="images/payment/sbp.png" alt="СБП" style="max-width:80%; max-height:32px; object-fit:contain;"></div>
+          <div class="pay-method" data-pay="card"><img src="images/payment/card.png" alt="Карта" style="max-width:82%; max-height:30px; object-fit:contain; transform:scale(1.35);"></div>
+          <div class="pay-method" data-pay="crypto"><img src="images/payment/crypto.png" alt="Крипта" style="max-width:86%; max-height:34px; object-fit:contain; border-radius:6px; transform:scale(1.35);"></div>
+        </div>
+
+        <div class="cx-checkout-divider"></div>
+
+        <div class="field-label" id="cart-email-label">E-mail для чека</div>
+        <input class="field-input" id="cart-email-input" type="email" placeholder="E-mail для чека">
+        <div class="field-error" id="cart-email-error">Заполните данные</div>
+
+        <div class="agree-row" id="cart-agree-row">
+          <div class="agree-check checked" id="cart-agree-check">
+            <svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></svg>
+          </div>
+          <div>Согласен с условиями <a class="agree-link" href="#" onclick="return false;">Пользовательского соглашения</a> и <a class="agree-link" href="#" onclick="return false;">Политики конфиденциальности</a></div>
+        </div>
+      </div>
+
+      <div class="cx-buybar" id="cx-buybar" style="display:none;">
+        <button class="cx-buybar-btn" id="cart-buy-btn">Перейти к оплате</button>
+      </div>
+    </div>
+
+    <!-- ============ PROFILE VIEW ============ -->
+    <div class="view" id="view-profile">
+      <div class="profile-head">
+        <div class="avatar">M</div>
+        <div>
+          <div class="profile-name">Гость</div>
+          <div class="profile-id">ID: MC-208491</div>
+        </div>
+      </div>
+      <div class="list-card" style="margin-bottom:16px;">
+        <div class="list-row" id="purchases-row">
+          <div class="list-name">Мои покупки</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="list-card" style="margin-bottom:16px;">
+        <a class="list-row" id="support-row" href="https://t.me/metracodehelp" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">
+          <div class="list-name">Поддержка</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+        <div class="list-row">
+          <div class="list-name">О нас</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="list-row">
+          <div class="list-name">Гарантии</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="list-card">
+        <div class="list-row" id="terms-row">
+          <div class="list-name">Пользовательское соглашение</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="list-row" id="privacy-row">
+          <div class="list-name">Политика конфиденциальности</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PURCHASES VIEW ============ -->
+    <div class="view" id="view-purchases">
+      <div class="detail-topbar">
+        <div class="detail-back" id="purchases-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="detail-title">Мои покупки</div>
+        <div style="width:20px; flex-shrink:0;"></div>
+      </div>
+      <div id="purchases-list"></div>
+    </div>
+
+    <!-- ============ PRODUCT DETAIL VIEW ============ -->
+    <div class="view" id="view-product">
+      <div class="detail-topbar">
+        <div class="detail-back" id="product-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title" id="product-topbar-title"></div>
+        <div style="width:52px;"></div>
+      </div>
+      <div class="detail-cover" id="product-cover"></div>
+      <div class="detail-panel">
+        <div class="detail-name-row" style="display:flex; align-items:center; gap:8px;">
+          <div class="detail-name" id="product-name" style="flex:1; min-width:0;"></div>
+          <div id="product-heart-slot"></div>
+        </div>
+        <div class="detail-price" id="product-price"></div>
+        <div class="detail-old" id="product-old"></div>
+        <div class="detail-country-label" id="product-edition-label">Издание</div>
+        <div class="detail-country-tabs" id="product-edition-tabs"></div>
+        <div class="detail-country-label" id="product-country-label">Регион аккаунта</div>
+        <div class="detail-country-tabs" id="product-country-tabs"></div>
+        <div id="product-desc-default">
+          <div class="detail-desc-title">Описание</div>
+          <div class="detail-desc" id="product-desc"></div>
+        </div>
+      </div>
+      <button class="buy-btn" id="product-buy-btn">Добавить в корзину</button>
+      <div style="height:10px;"></div>
+    </div>
+
+    <!-- ============ TOP-UP (DONATE) VIEW ============ -->
+    <div class="view" id="view-topup">
+      <div class="detail-topbar">
+        <div class="detail-back" id="topup-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title" id="topup-topbar-title"></div>
+        <div style="width:52px;"></div>
+      </div>
+
+      <div class="topup-info-card">
+        <div class="topup-info-head">
+          <div class="topup-info-logo-wrap">
+            <div class="topup-info-logo" id="topup-info-logo"></div>
+            <div class="topup-info-badge" id="topup-info-badge" style="display:none;"></div>
+          </div>
+          <div class="topup-info-name" id="topup-heading"></div>
+        </div>
+
+        <div class="topup-info-body" id="topup-pkg-label"></div>
+      </div>
+
+      <div class="pill-tabs" id="topup-mode-tabs" style="margin:16px 16px 4px; display:none;">
+        <div class="pill" data-mode="direct">UC</div>
+        <div class="pill" data-mode="codes">WOW монеты</div>
+      </div>
+      <div class="giftcard-grid" id="topup-pkg-grid"></div>
+
+      <!-- Форма "своя сумма": логин + сумма + итог с комиссией.
+           Показывается вместо topup-pkg-grid для сервисов с customAmount
+           (см. donateServices.steam) — там нет фиксированных номиналов. -->
+      <div class="topup-custom-form" id="topup-custom-form" style="display:none;">
+        <div class="field-label id-field-label" style="margin:16px 16px 6px;">
+          <span>Логин Steam</span>
+          <div class="id-help-btn" id="topup-custom-login-help-btn">?</div>
+        </div>
+        <input class="field-input" id="topup-custom-login" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ваш логин">
+        <div class="field-error" id="topup-custom-login-error">Введите логин</div>
+
+        <div class="field-label" id="topup-custom-amount-label" style="margin:14px 16px 6px;">Сумма пополнения ₽</div>
+        <input class="field-input" id="topup-custom-amount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Например, 500">
+        <div class="field-error" id="topup-custom-amount-error">Укажите сумму</div>
+
+        <div class="field-label" style="margin:14px 16px 6px;">Способ оплаты</div>
+        <div class="payment-card">
+          <div class="pay-methods" id="topup-custom-pay-methods">
+            <div class="pay-method selected" data-pay="sbp"><img src="images/payment/sbp.png" alt="СБП" style="max-width:80%; max-height:36px; object-fit:contain;"></div>
+            <div class="pay-method" data-pay="card"><img src="images/payment/card.png" alt="Карта" style="max-width:82%; max-height:34px; object-fit:contain; transform:scale(1.35);"></div>
+          </div>
+        </div>
+
+        <div class="topup-custom-summary" id="topup-custom-summary">
+          <div class="topup-custom-row"><span id="topup-custom-sum-label">Сумма пополнения</span><span id="topup-custom-sum-val">0 ₽</span></div>
+          <div class="topup-custom-row"><span>Комиссия сервиса 6%</span><span id="topup-custom-fee-val">0 ₽</span></div>
+          <div class="topup-custom-row topup-custom-total"><span>К оплате</span><span id="topup-custom-total-val">0 ₽</span></div>
+        </div>
+
+        <button class="buy-btn" id="topup-custom-buy-btn">Перейти к оплате</button>
+      </div>
+
+      <div style="height:10px;"></div>
+    </div>
+
+    <!-- ============ GENERIC PAYMENT PAGE (donate + gift cards) ============ -->
+    <div class="view" id="view-payment">
+      <div class="detail-topbar">
+        <div class="detail-back" id="payment-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title" id="payment-topbar-title"></div>
+        <div style="width:52px;"></div>
+      </div>
+      <div style="padding:4px 16px 0; font-size:20px; font-weight:800;" id="payment-heading"></div>
+
+      <div class="topup-pkg-list" style="padding-top:4px;">
+        <div class="topup-pkg selected" style="cursor:default;">
+          <div class="topup-pkg-icon" id="payment-item-icon"></div>
+          <div class="topup-pkg-info">
+            <div class="topup-pkg-name" id="payment-item-name"></div>
+            <div class="giftcard-country" id="payment-item-country" style="display:none;"></div>
+            <div class="topup-pkg-price" id="payment-item-price"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-label" id="payment-qty-label" style="display:none;">Количество</div>
+      <div class="payment-qty-stepper" id="payment-qty-stepper" style="display:none;">
+        <button type="button" id="payment-qty-dec">−</button>
+        <span id="payment-qty-value">1</span>
+        <button type="button" id="payment-qty-inc">+</button>
+      </div>
+
+      <div class="field-label id-field-label" id="payment-id-label" style="display:none;">
+        <span id="payment-id-label-text">ID персонажа</span>
+        <div class="id-help-btn" id="payment-id-help-btn" style="display:none;">?</div>
+      </div>
+      <input class="field-input" id="payment-id-input" type="text" placeholder="Введите ID" style="display:none;">
+      <div class="field-error" id="payment-id-error">Заполните данные</div>
+
+      <div class="field-label" id="payment-server-label" style="display:none;">Выберите Ваш сервер</div>
+      <div class="dropdown-select" id="payment-server-dropdown" style="display:none;">
+        <div class="dropdown-select-trigger field-input placeholder" id="payment-server-trigger">
+          <span id="payment-server-trigger-text">Выберите сервер</span>
+          <svg class="dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="dropdown-select-menu" id="payment-server-menu"></div>
+      </div>
+      <div class="field-error" id="payment-server-error">Выберите сервер</div>
+
+      <div class="field-label id-field-label" id="payment-zoneid-label" style="display:none;">
+        <span id="payment-zoneid-label-text">Zone ID</span>
+        <div class="id-help-btn" id="payment-zoneid-help-btn" style="display:none;">?</div>
+      </div>
+      <input class="field-input" id="payment-zoneid-input" type="text" placeholder="Введите Zone ID" style="display:none;">
+      <div class="field-error" id="payment-zoneid-error">Заполните данные</div>
+
+      <div class="field-label" id="payment-username-label" style="display:none;">@username</div>
+      <input class="field-input" id="payment-username-input" type="text" placeholder="@username" style="display:none;" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="field-error" id="payment-username-error">Укажите @username</div>
+
+      <div class="field-label">E-mail</div>
+      <input class="field-input" id="payment-email-input" type="email" placeholder="Для чека об оплате">
+      <div class="field-error" id="payment-email-error">Заполните данные</div>
+
+      <div class="field-label">Способ оплаты</div>
+      <div class="payment-card">
+        <div class="pay-methods" id="payment-pay-methods">
+          <div class="pay-method selected" data-pay="sbp"><img src="images/payment/sbp.png" alt="СБП" style="max-width:80%; max-height:32px; object-fit:contain;"></div>
+          <div class="pay-method" data-pay="card"><img src="images/payment/card.png" alt="Карта" style="max-width:82%; max-height:30px; object-fit:contain; transform:scale(1.35);"></div>
+          <div class="pay-method" data-pay="crypto"><img src="images/payment/crypto.png" alt="Крипта" style="max-width:86%; max-height:34px; object-fit:contain; border-radius:6px; transform:scale(1.35);"></div>
+        </div>
+
+        <div class="payment-card-divider"></div>
+
+        <div class="cx-promo-toggle" id="payment-promo-toggle">
+          <span class="promo-toggle-label"><span class="promo-percent-badge">%</span>Есть промокод?</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="cx-promo-panel" id="payment-promo-panel" style="display:none;">
+          <div class="cart-promo-row" id="payment-promo-row">
+            <input class="field-input" id="payment-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <button class="cart-promo-btn" id="payment-promo-apply-btn">Применить</button>
+          </div>
+          <div class="field-error" id="payment-promo-error">Промокод недействителен</div>
+          <div class="cart-promo-success" id="payment-promo-success"></div>
+        </div>
+        <div class="cx-promo-applied" id="payment-promo-applied" style="display:none;">
+          <span class="promo-percent-badge">%</span>
+          <span class="promo-applied-text">Промокод <b id="payment-promo-code-label"></b> применён</span>
+          <span class="x" id="payment-promo-remove"><svg class="promo-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+      </div>
+
+      <div class="topup-total-box">
+        <div class="summary-row"><span>Стоимость товаров</span><span id="payment-sum">0 ₽</span></div>
+        <div class="summary-row" id="payment-old-discount-row" style="display:none; color:var(--green);"><span>Скидка</span><span id="payment-old-discount-amount"></span></div>
+        <div class="summary-row" id="payment-discount-row" style="display:none; color:var(--green);"><span id="payment-discount-label"></span><span id="payment-discount-amount"></span></div>
+        <div class="summary-total"><span>Сумма к оплате</span><span id="payment-total">0 ₽</span></div>
+      </div>
+
+      <div class="agree-row">
+        <div class="agree-check checked">
+          <svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></svg>
+        </div>
+        <div>Согласен с условиями <a class="agree-link" href="#" onclick="return false;">Пользовательского соглашения</a> и <a class="agree-link" href="#" onclick="return false;">Политики конфиденциальности</a></div>
+      </div>
+
+      <button class="buy-btn" id="payment-buy-btn" style="background:var(--accent-b);">Перейти к оплате</button>
+      <div style="height:10px;"></div>
+    </div>
+
+    <!-- ============ SUBSCRIPTION DETAIL (country/period picker) ============ -->
+    <div class="view" id="view-sub-detail">
+      <div class="detail-topbar">
+        <div class="detail-back" id="subdetail-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title" id="subdetail-topbar-title"></div>
+        <div style="width:52px;"></div>
+      </div>
+      <div class="detail-cover" id="subdetail-cover" style="aspect-ratio:16/9;"></div>
+      <div class="detail-panel">
+        <div class="detail-name" id="subdetail-name"></div>
+
+        <div id="subdetail-tier-row">
+          <div class="field-label" style="margin:20px 0 8px;">Тариф</div>
+          <div class="pill-tabs" id="subdetail-tier-tabs" style="margin:0 0 4px;"></div>
+        </div>
+
+        <div class="field-label" style="margin:20px 0 8px;">Период</div>
+        <div class="pill-tabs" id="subdetail-period-tabs" style="margin:0 0 4px;"></div>
+
+        <div class="field-label" style="margin:20px 0 8px;">Регион аккаунта</div>
+        <div class="pill-tabs" id="subdetail-country-tabs" style="margin:0 0 4px;"></div>
+
+        <div class="detail-price" id="subdetail-price" style="margin-top:20px;"></div>
+        <div class="detail-old" id="subdetail-old"></div>
+        <div class="detail-desc" style="margin-top:12px;">Подписка активируется на аккаунте выбранного региона. Убедитесь, что у вас есть доступ к аккаунту нужной страны.</div>
+      </div>
+      <button class="buy-btn" id="subdetail-buy-btn">Добавить в корзину</button>
+      <div style="height:10px;"></div>
+    </div>
+
+    <!-- ============ GIFT CARD CATALOG VIEW ============ -->
+    <div class="view" id="view-giftcards">
+      <div class="detail-topbar">
+        <div class="detail-back" id="giftcards-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title" id="giftcards-topbar-title"></div>
+        <div style="width:52px;"></div>
+      </div>
+
+      <div class="topup-info-card" id="giftcard-info-card">
+        <div class="topup-info-head">
+          <div class="topup-info-logo-wrap">
+            <div class="topup-info-logo" id="giftcard-info-logo"></div>
+            <div class="topup-info-badge" id="giftcard-info-badge" style="display:none;"></div>
+          </div>
+          <div class="topup-info-name" id="giftcard-info-name"></div>
+        </div>
+        <div class="topup-info-body" id="giftcard-pkg-label"></div>
+      </div>
+
+      <div class="pill-tabs" id="giftcard-country-tabs" style="display:none; margin:4px 16px 12px;"></div>
+      <div class="giftcard-grid" id="giftcard-grid"></div>
+
+      <!-- ============ TELEGRAM STARS BUY SCREEN ============ -->
+      <div id="tg-stars-buy" style="display:none;">
+        <div class="field-label" style="margin-top:4px;">Получатель</div>
+        <input class="field-input" id="tgstars-username-input" type="text" placeholder="@username" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="field-error" id="tgstars-username-error">Укажите @username</div>
+
+        <div class="field-label">Или выберите пакет</div>
+        <div class="tg-pkg-grid" id="tgstars-pkg-list"></div>
+
+        <div class="field-label">Промокод</div>
+        <div class="cart-promo-row" id="tgstars-promo-row">
+          <input class="field-input" id="tgstars-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="cart-promo-btn" id="tgstars-promo-apply-btn">Применить</button>
+        </div>
+        <div class="field-error" id="tgstars-promo-error">Промокод недействителен</div>
+        <div class="cart-promo-success" id="tgstars-promo-success"></div>
+
+        <div class="topup-total-box">
+          <div class="summary-row"><span>Стоимость</span><span id="tgstars-sum">0 ₽</span></div>
+          <div class="summary-row" id="tgstars-old-discount-row" style="display:none; color:var(--green);"><span>Скидка</span><span id="tgstars-old-discount-amount"></span></div>
+          <div class="summary-row" id="tgstars-discount-row" style="display:none; color:var(--green);"><span id="tgstars-discount-label"></span><span id="tgstars-discount-amount"></span></div>
+          <div class="summary-total"><span>Итого</span><span id="tgstars-total">0 ₽</span></div>
+        </div>
+
+        <div class="agree-row">
+          <div class="agree-check checked">
+            <svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></svg>
+          </div>
+          <div>Согласен с условиями <a class="agree-link" href="#" onclick="return false;">Пользовательского соглашения</a> и <a class="agree-link" href="#" onclick="return false;">Политики конфиденциальности</a></div>
+        </div>
+
+        <div class="tg-buy-wrap">
+          <span class="tg-buy-badge">Выгоднее</span>
+          <button class="buy-btn tg-buy-btn" id="tgstars-sbp-btn"><span>Оплатить через СБП</span><img class="tg-buy-icon" src="images/sbp-icon.png" alt="СБП"></button>
+        </div>
+        <button class="buy-btn tg-other-btn" id="tgstars-other-btn">Другие способы</button>
+        <div style="height:10px;"></div>
+      </div>
+
+      <!-- ============ TELEGRAM PREMIUM BUY SCREEN ============ -->
+      <div id="tg-prem-buy" style="display:none;">
+        <div class="field-label" style="margin-top:4px;">Получатель</div>
+        <input class="field-input" id="tgprem-username-input" type="text" placeholder="@username" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="field-error" id="tgprem-username-error">Укажите @username</div>
+
+        <div class="field-label">Выберите срок подписки</div>
+        <div class="tg-prem-plan-list" id="tgprem-plan-list"></div>
+
+        <div class="field-label">Промокод</div>
+        <div class="cart-promo-row" id="tgprem-promo-row">
+          <input class="field-input" id="tgprem-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="cart-promo-btn" id="tgprem-promo-apply-btn">Применить</button>
+        </div>
+        <div class="field-error" id="tgprem-promo-error">Промокод недействителен</div>
+        <div class="cart-promo-success" id="tgprem-promo-success"></div>
+
+        <div class="topup-total-box">
+          <div class="summary-row"><span>Стоимость</span><span id="tgprem-sum">0 ₽</span></div>
+          <div class="summary-row" id="tgprem-old-discount-row" style="display:none; color:var(--green);"><span>Скидка</span><span id="tgprem-old-discount-amount"></span></div>
+          <div class="summary-row" id="tgprem-discount-row" style="display:none; color:var(--green);"><span id="tgprem-discount-label"></span><span id="tgprem-discount-amount"></span></div>
+          <div class="summary-total"><span>Итого</span><span id="tgprem-total">0 ₽</span></div>
+        </div>
+
+        <div class="agree-row">
+          <div class="agree-check checked">
+            <svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></svg>
+          </div>
+          <div>Согласен с условиями <a class="agree-link" href="#" onclick="return false;">Пользовательского соглашения</a> и <a class="agree-link" href="#" onclick="return false;">Политики конфиденциальности</a></div>
+        </div>
+
+        <div class="tg-buy-wrap">
+          <span class="tg-buy-badge">Выгоднее</span>
+          <button class="buy-btn tg-buy-btn" id="tgprem-sbp-btn"><span>Оплатить через СБП</span><img class="tg-buy-icon" src="images/sbp-icon.png" alt="СБП"></button>
+        </div>
+        <button class="buy-btn tg-other-btn" id="tgprem-other-btn">Другие способы</button>
+        <div style="height:10px;"></div>
+      </div>
+    </div>
+
+    <!-- ============ TELEGRAM STARS — OTHER PAYMENT METHODS ============ -->
+    <div class="view" id="view-tg-other">
+      <div class="detail-topbar">
+        <div class="detail-back" id="tgother-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title">Другие способы</div>
+        <div style="width:52px;"></div>
+      </div>
+      <div class="list-card" style="margin:6px 16px 0;">
+        <div class="list-row" id="tgother-card">
+          <div class="list-icon" style="background:#fff;"><img src="images/payment/card.png" alt="Банковская карта" style="max-width:80%; max-height:26px; object-fit:contain;"></div>
+          <div class="list-name">Банковская карта</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="list-row" id="tgother-crypto">
+          <div class="list-icon" style="background:#fff;"><img src="images/payment/crypto.png" alt="Криптовалюта" style="max-width:88%; max-height:32px; object-fit:contain; border-radius:6px;"></div>
+          <div class="list-name">Криптовалюта</div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ USER AGREEMENT VIEW ============ -->
+    <div class="view" id="view-agree">
+      <div class="detail-topbar">
+        <div class="detail-back" id="agree-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title">Пользовательское соглашение</div>
+        <div style="width:52px;"></div>
+      </div>
+      <div class="legal-doc">
+      <h1 class="legal-title">ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ</h1>
+      <div class="legal-subtitle">об использовании сервиса MetraCode (ред. от [УКАЗАТЬ ДАТУ])</div>
+      <p class="legal-p">Настоящее Соглашение опубликовано Индивидуальным предпринимателем Ершовым Артемом Юрьевичем и действует в редакции, указанной выше.</p>
+      <h3 class="legal-heading">1. Общие положения</h3>
+      <p class="legal-p">1.1. Настоящее Пользовательское соглашение (далее — Соглашение) представляет собой договор между Индивидуальным предпринимателем Ершовым Артемом Юрьевичем (далее — Исполнитель) и пользователем сети Интернет/пользователем Телеграм-бота MetraCode (далее — Пользователь) об использовании сервиса MetraCode (далее — Сервис).</p>
+      <p class="legal-p">1.2. Начиная использовать Сервис/его отдельные функции, Пользователь считается принявшим условия настоящего Соглашения в полном объеме, без всяких оговорок и исключений. В случае несогласия Пользователя с какими-либо из положений Соглашения Пользователь не вправе использовать Сервис.</p>
+      <p class="legal-p">1.3. Исполнитель вправе в любое время без уведомления Пользователя изменить положения настоящего Соглашения. Новая редакция Соглашения вступает в силу после ее размещения в Сервисе или на официальном сайте/боте Сервиса по адресу <a href="https://t.me/MetraCodeBot" target="_blank" rel="noopener noreferrer">https://t.me/MetraCodeBot</a> с внесенными поправками и/или дополнительными условиями по предоставлению соответствующих услуг.</p>
+      <p class="legal-p">1.4. Использование Пользователем Сервиса после такого размещения представляет собой согласие Пользователя с внесенными изменениями. В случае если Пользователь не согласен с новой редакцией Соглашения, он обязан прекратить использование Сервиса.</p>
+      <p class="legal-p">1.5. В зависимости от региона Пользователя все или некоторые функции Сервиса могут быть недоступны или ограничены. Функции считаются недоступными (ограниченными) для Пользователя из определенного региона, если такой Пользователь не может ими воспользоваться в явном виде. Применение любых технических и программных методов обхода данных ограничений запрещено. Положения настоящего Соглашения, регулирующие недоступные (ограниченные) для Пользователя функции Сервиса, не применяются до тех пор, пока Пользователю такие</p>
+      <p class="legal-p">функции не станут доступны в явном виде.</p>
+      <h3 class="legal-heading">2. Основные понятия</h3>
+      <p class="legal-p">2.1. Сервис — технологическая платформа, доступ к которой обеспечивается посредством программного обеспечения (мессенджер Telegram), представляющая собой совокупность содержащихся в информационной системе информации и объектов интеллектуальной собственности (в том числе программы для ЭВМ, база данных, графическое оформление интерфейса (дизайн) и др.) (далее — Бот MetraCode), которая позволяет ее пользователям приобретать Цифровые товары для последующего использования в компьютерных играх, на игровых платформах и в иных сервисах (далее — Игра/Платформа) посредством формирования и подачи заказов в рамках данной платформы. Пользователь понимает, что Исполнитель не является дистрибьютором Игр/Платформ, не отвечает за их работоспособность, а лишь способствует Пользователю в приобретении желаемого Цифрового товара.</p>
+      <p class="legal-p">2.2. Цифровой товар — игровая валюта, внутриигровые предметы, ключи активации, коды пополнения баланса, подарочные карты, подписки и иные неперсонифицированные либо привязанные к учетной записи Пользователя цифровые товары и услуги, предоставляющие доступ к пополнению или расширению функциональности аккаунта (учетной записи) в PS Store, Apple ID, Battle.net, Nintendo, PUBG Mobile, Mobile Legends, Free Fire, Identity V, Marvel Rivals и иных Играх/ Платформах, перечень которых определяется и может изменяться Исполнителем по своему усмотрению. Валюта, номинал и условия приобретения конкретного Цифрового товара отражаются в интерфейсе Сервиса перед размещением Заказа.</p>
+      <p class="legal-p">2.3. Заказ — сформированный в рамках Сервиса заказ Пользователя на приобретение одного или нескольких Цифровых товаров с определенными характеристиками и стоимостью.</p>
+      <h3 class="legal-heading">3. Предмет Соглашения</h3>
+      <p class="legal-p">3.1. В соответствии с Соглашением Пользователь вправе размещать Заказ для целей приобретения Цифрового товара в рамках Сервиса и обязуется оплачивать Заказ в порядке, предусмотренном Соглашением, а Исполнитель обязуется обеспечивать работу Сервиса и осуществлять взаиморасчет между Пользователем и Исполнителем в соответствии с Соглашением.</p>
+      <p class="legal-p">3.2. Все существующие на данный момент функции Сервиса, а также любое развитие их и/или добавление новых являются предметом Соглашения.</p>
+      <p class="legal-p">3.3. Заказ, сформированный в рамках Сервиса, направлен исключительно на приобретение Цифрового товара (либо нескольких Цифровых товаров) с</p>
+      <p class="legal-p">определенными характеристиками и стоимостью.</p>
+      <p class="legal-p">3.4. Цифровые товары предоставляются только при наличии соответствующей возможности у Исполнителя.</p>
+      <h3 class="legal-heading">4. Порядок пользования Сервисом</h3>
+      <p class="legal-p">4.1. Сервис предоставляется Пользователю для личного некоммерческого использования.</p>
+      <p class="legal-p">4.2. Для получения доступа к Сервису Пользователь должен иметь учетную запись в мессенджере Telegram, посредством которого должен запустить Бота MetraCode (<a href="https://t.me/MetraCodeBot)" target="_blank" rel="noopener noreferrer">https://t.me/MetraCodeBot)</a> нажатием кнопки «НАЧАТЬ»/«START». Пользуясь Сервисом, Пользователь признает, что обладает полной дееспособностью для принятия настоящего Соглашения, т.е. достиг 18-летнего возраста или обрел полную дееспособность в результате эмансипации.</p>
+      <p class="legal-p">4.3. Пользователь дает Исполнителю согласие на обработку его персональной информации. При использовании Пользователем Сервиса персональная информация Пользователя передается Исполнителю для обработки на условиях и для целей, определенных в Политике конфиденциальности, доступной для ознакомления по адресу: <a href="https://t.me/MetraCodeBot." target="_blank" rel="noopener noreferrer">https://t.me/MetraCodeBot.</a></p>
+      <p class="legal-p">4.4. Для пользования Сервисом Пользователь предоставляет информацию для целей оказания услуг: электронную почту и/или идентификатор своей учетной записи в выбранной Игре/Платформе. Пользователь обязуется предоставлять достоверные данные и обеспечить их точность, полноту и актуальность. В случае нарушения данного обязательства Исполнитель не несет ответственности за ненадлежаще оказанные услуги вследствие невозможности идентифицировать Пользователя или исполнить Заказ. Исполнитель исходит из того, что предоставленные Пользователем данные являются достоверными.</p>
+      <p class="legal-p">4.5. Пользователь обязуется не разглашать данные, полученные от Исполнителя (включая коды и ключи активации), и не передавать их третьим лицам до момента их правомерного использования самим Пользователем. Пользователь несет ответственность за использование приобретенного Цифрового товара.</p>
+      <p class="legal-p">4.6. Пользователь не вправе уступать права из настоящего Соглашения третьим лицам.</p>
+      <p class="legal-p">4.7. Пользование Сервисом возможно только при наличии доступа к сети Интернет. Пользователь самостоятельно получает и оплачивает такой доступ на условиях и по тарифам своего оператора связи или провайдера доступа к сети Интернет.</p>
+      <p class="legal-p">4.8. Пользователь настоящим уведомлен, понимает и соглашается с тем, что Сервис</p>
+      <p class="legal-p">может собирать обезличенные (без привязки к персональным данным Пользователя) статистические данные об использовании Сервиса и в автоматическом режиме передавать их Исполнителю в соответствии с Политикой конфиденциальности.</p>
+      <p class="legal-p">4.9. Пользователь соглашается на получение сервисных сообщений от Бота MetraCode в мессенджер Telegram либо на электронную почту Пользователя, необходимых для реализации функционала Сервиса.</p>
+      <p class="legal-p">4.10. Пользователь признает, что обмен юридически значимыми документами будет осуществляться посредством мессенджера Telegram либо посредством электронной почты, указанной в разделе 12 настоящего Соглашения, и электронной почтой Пользователя, указанной в Боте.</p>
+      <p class="legal-p">4.11. Электронная почта Пользователя и Исполнителя являются аналогами собственноручной подписи указанных лиц.</p>
+      <h3 class="legal-heading">5. Порядок расчетов</h3>
+      <p class="legal-p">5.1. Исполнитель действует по поручению Пользователя с привлечением уполномоченного оператора по приему платежей. Оплата может включать в себя соответствующие налоги и сборы, предусмотренные действующим законодательством.</p>
+      <p class="legal-p">5.2. Исполнитель не является кредитной организацией и не осуществляет банковскую деятельность. Все платежи в рамках Сервиса осуществляются с использованием сторонних платежных сервисов (операторов по приему платежей) в соответствии с их условиями и правилами.</p>
+      <p class="legal-p">5.3. Оплата Заказа может быть произведена Пользователем одним из способов, доступных в интерфейсе Сервиса на момент оформления Заказа. Перечень доступных способов оплаты определяется и может изменяться Исполнителем по своему усмотрению.</p>
+      <p class="legal-p">5.4. Итоговая стоимость Заказа может различаться в зависимости от выбранного способа оплаты и в любом случае отображается в интерфейсе Сервиса до подтверждения Заказа Пользователем.</p>
+      <p class="legal-p">5.5. Оплата производится Пользователем непосредственно в интерфейсе Сервиса и считается произведенной полностью с момента, когда Пользователь ознакомился с составом Заказа и итоговой стоимостью и подтвердил Заказ.</p>
+      <p class="legal-p">5.6. Сервис не имеет доступа к полным данным банковской карты Пользователя и не несет ответственности за сохранность и конфиденциальность передаваемых данных при проведении безналичной оплаты. Безналичная оплата осуществляется с участием уполномоченного оператора по приему платежей и регулируется правилами</p>
+      <p class="legal-p">соответствующих платежных систем, банков и других участников расчетов.</p>
+      <p class="legal-p">5.7. Пользователь может в любое время отказаться от Заказа до момента его оплаты.</p>
+      <h3 class="legal-heading">6. Ограничение ответственности</h3>
+      <p class="legal-p">6.1. Исполнитель не несет ответственности за любые убытки, причиненные Пользователю вследствие нарушения Пользователем лицензионных или иных соглашений между Пользователем и правообладателем Игры/Платформы.</p>
+      <p class="legal-p">6.2. Пользователь обязуется самостоятельно ознакомиться перед размещением Заказа с ограничениями по использованию Игры/Платформы, в том числе с лицензионными соглашениями правообладателя.</p>
+      <p class="legal-p">6.3. Исполнитель не несет ответственности за временную недоступность Сервиса, вызванную обстоятельствами, не зависящими от Исполнителя (сбои хостинга, действия третьих лиц, технические работы у платежных партнеров и т.п.).</p>
+      <h3 class="legal-heading">7. Лицензионное соглашение</h3>
+      <p class="legal-p">7.1. Исполнитель безвозмездно предоставляет Пользователю непередаваемое право использования Сервиса на территории всех стран мира следующими способами:</p>
+      <p class="legal-p">— использовать Сервис по прямому функциональному назначению через мессенджер Telegram на неограниченном числе устройств Пользователя;</p>
+      <p class="legal-p">— воспроизводить и распространять Сервис в некоммерческих целях (безвозмездно).</p>
+      <p class="legal-p">7.2. Сервис должен использоваться (в том числе распространяться) под наименованием «MetraCode». Пользователь не вправе изменять и/или удалять наименование Сервиса и указания на правообладателя.</p>
+      <p class="legal-p">7.3. За исключением случаев, прямо предусмотренных Соглашением или законодательством РФ, Пользователь не вправе изменять, декомпилировать, дизассемблировать, дешифровать и производить иные подобные действия с Сервисом, создавать производные произведения на его основе, а также иным образом использовать Сервис или его компоненты без письменного согласия Исполнителя.</p>
+      <p class="legal-p">7.4. Пользователь не вправе воспроизводить и распространять Сервис в коммерческих целях (в том числе за плату) без письменного согласия Исполнителя.</p>
+      <h3 class="legal-heading">8. Персональные данные</h3>
+      <p class="legal-p">8.1. Пользователь дает Исполнителю согласие на обработку его персональных данных для целей оказания Пользователю услуг в рамках Сервиса.</p>
+      <p class="legal-p">8.2. Перечень собираемых Исполнителем персональных данных, цели, сроки и условия их обработки определяются Политикой конфиденциальности, являющейся неотъемлемой частью Соглашения и размещенной по адресу: <a href="https://t.me/MetraCodeBot." target="_blank" rel="noopener noreferrer">https://t.me/MetraCodeBot.</a></p>
+      <p class="legal-p">8.3. Обработка персональных данных осуществляется Исполнителем в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных».</p>
+      <h3 class="legal-heading">9. Возвраты</h3>
+      <p class="legal-p">9.1. По общему правилу возврат уплаченных денежных средств не осуществляется после исполнения Заказа и передачи Пользователю приобретенного Цифрового товара.</p>
+      <p class="legal-p">9.2. В случае, если полученный Цифровой товар не может быть использован по назначению (например, если ключ/код уже был активирован до его передачи Пользователю, является нерабочим или задвоен), Пользователь вправе обратиться к Исполнителю с запросом на возврат уплаченных денежных средств за соответствующий Цифровой товар. Запросы на возврат рассматриваются Исполнителем, если они направлены не позднее 14 дней с момента исполнения Заказа. В запросе должны быть указаны:</p>
+      <p class="legal-p">— ФИО Пользователя и контактные данные для связи;</p>
+      <p class="legal-p">— адрес электронной почты, указанный при оформлении Заказа;</p>
+      <p class="legal-p">— дата и номер Заказа;</p>
+      <p class="legal-p">— сведения о Цифровом товаре, который не может быть использован по назначению;</p>
+      <p class="legal-p">— сведения о дате и времени попытки использования (активации) Цифрового товара;</p>
+      <p class="legal-p">— реквизиты для возврата денежных средств (номер карты/счета либо иные реквизиты, соответствующие способу оплаты Заказа).</p>
+      <p class="legal-p">9.3. Получив запрос на возврат, Исполнитель проводит внутреннюю проверку, в ходе которой вправе:</p>
+      <p class="legal-p">— запрашивать у Пользователя любые сведения, касающиеся невозможности использования Цифрового товара (скриншоты, видеозапись процесса активации, сведения об устройстве, включая IP-адрес, переписку с поддержкой соответствующей Игры/Платформы, дату и время попытки активации и т.д.);</p>
+      <p class="legal-p">— запрашивать у Пользователя содействия для выяснения обстоятельств (например, обращение в поддержку соответствующей Игры/Платформы, письменные пояснения).</p>
+      <p class="legal-p">9.4. Срок проведения внутренней проверки Исполнителя составляет до 14 дней с момента получения от Пользователя всех запрошенных сведений.</p>
+      <p class="legal-p">9.5. Исполнитель вправе отказать Пользователю в возврате денежных средств, если в ходе проверки установлено, что Цифровой товар был активирован после его передачи Пользователю, либо если Пользователь не предоставляет запрошенные сведения (п. 9.3) и/или не содействует проверке.</p>
+      <p class="legal-p">9.6. Если в ходе проверки установлено, что Цифровой товар не может быть использован по назначению по причинам, возникшим до его передачи Пользователю, либо Заказ не был исполнен по вине Исполнителя, Исполнитель производит возврат денежных средств за соответствующий Цифровой товар в срок, предусмотренный правилами используемого способа оплаты.</p>
+      <p class="legal-p">9.7. Настоящий раздел не ограничивает права Пользователя-потребителя, установленные императивными нормами Закона РФ от 07.02.1992 № 2300-1 «О защите прав потребителей».</p>
+      <h3 class="legal-heading">10. Порядок разрешения споров</h3>
+      <p class="legal-p">10.1. Все разногласия и споры Стороны обязуются разрешать в претензионном порядке, а в случае недостижения согласия — в суде.</p>
+      <p class="legal-p">10.2. Сторона, у которой возникла претензия, направляет другой Стороне письменную претензию в соответствии с п. 4.10 Соглашения.</p>
+      <p class="legal-p">10.3. В случае если ответ на претензию не будет получен направившей ее Стороной в течение 25 (двадцати пяти) рабочих дней с даты направления соответствующего сообщения, либо если Стороны не придут к соглашению по возникшим претензиям и/ или разногласиям, спор подлежит передаче на рассмотрение в суд в порядке, предусмотренном законодательством РФ, с учетом права Пользователя-потребителя обратиться в суд по своему месту жительства, месту нахождения Исполнителя, месту заключения или месту исполнения Соглашения (ст. 17 Закона РФ «О защите прав потребителей»).</p>
+      <h3 class="legal-heading">11. Заключительные положения</h3>
+      <p class="legal-p">11.1. Соглашение действует вплоть до отказа от него одной из Сторон. Стороны вправе отказаться от исполнения Соглашения, каждая по своей инициативе, путем направления соответствующего уведомления любым законным способом. Соглашение считается прекращенным в момент получения другой Стороной уведомления об отказе от Соглашения.</p>
+      <p class="legal-p">11.2. По вопросам, не урегулированным Соглашением, Стороны руководствуются</p>
+      <p class="legal-p">законодательством Российской Федерации.</p>
+      <h3 class="legal-heading">12. Реквизиты</h3>
+      <p class="legal-p">Индивидуальный предприниматель Ершов Артем Юрьевич ОГРНИП [УКАЗАТЬ] ИНН [УКАЗАТЬ] Адрес для связи: <a href="mailto:artem922822@yandex.ru">artem922822@yandex.ru</a></p>
+      </div>
+    </div>
+
+    <!-- ============ PRIVACY POLICY VIEW ============ -->
+    <div class="view" id="view-privacy">
+      <div class="detail-topbar">
+        <div class="detail-back" id="privacy-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Назад
+        </div>
+        <div class="detail-title">Политика конфиденциальности</div>
+        <div style="width:52px;"></div>
+      </div>
+      <div class="legal-doc">
+      <h1 class="legal-title">ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</h1>
+      <div class="legal-subtitle">сервиса MetraCode (ред. от [УКАЗАТЬ ДАТУ])</div>
+      <p class="legal-p">В настоящей Политике мы объясняем, какие персональные данные пользователей сервиса MetraCode (далее — Сервис) обрабатываются, для каких целей, на каких условиях, как долго хранятся и какие права есть у пользователей. Перед использованием Сервиса рекомендуем ознакомиться с Политикой. По вопросам обработки персональных данных пишите нам: <a href="mailto:artem922822@yandex.ru.">artem922822@yandex.ru.</a></p>
+      <p class="legal-p">Политика разработана в соответствии с Федеральным законом от 27.07.2006 № 152- ФЗ «О персональных данных» и является неотъемлемой частью Пользовательского соглашения, размещенного по адресу: <a href="https://t.me/MetraCodeBot." target="_blank" rel="noopener noreferrer">https://t.me/MetraCodeBot.</a></p>
+      <p class="legal-p">Термины и определения Оператор — Индивидуальный предприниматель Ершов Артем Юрьевич, ОГРНИП [УКАЗАТЬ], ИНН [УКАЗАТЬ], адрес для связи: <a href="mailto:artem922822@yandex.ru">artem922822@yandex.ru</a> — лицо, самостоятельно определяющее цели и состав обработки персональных данных.</p>
+      <p class="legal-p">Сервис — Телеграм-бот MetraCode, доступный по адресу <a href="https://t.me/MetraCodeBot," target="_blank" rel="noopener noreferrer">https://t.me/MetraCodeBot,</a> включая связанные страницы и функциональные возможности.</p>
+      <p class="legal-p">Пользователь — физическое лицо, использующее Сервис, направляющее Оператору обращения, принявшее Пользовательское соглашение или иным образом взаимодействующее с Оператором через Сервис.</p>
+      <p class="legal-p">Персональные данные — любая информация, относящаяся прямо или косвенно к определенному или определяемому Пользователю.</p>
+      <p class="legal-p">Обработка персональных данных — любое действие или совокупность действий с персональными данными, включая сбор, запись, систематизацию, накопление, хранение, уточнение, обновление, изменение, извлечение, использование, передачу, предоставление, доступ, блокирование, удаление и уничтожение.</p>
+      <h3 class="legal-heading">1. Общие положения</h3>
+      <p class="legal-p">1.1. Настоящая Политика определяет порядок, цели, условия и принципы обработки персональных данных Пользователей, а также их права и меры, принимаемые</p>
+      <p class="legal-p">Оператором для защиты персональных данных.</p>
+      <p class="legal-p">1.2. Политика разработана в целях обеспечения защиты прав и свобод Пользователей при обработке их персональных данных, соблюдения требований Федерального закона № 152-ФЗ, обеспечения прозрачности обработки персональных данных и предотвращения неправомерного или случайного доступа к ним.</p>
+      <p class="legal-p">1.3. Используя Сервис, Пользователь подтверждает ознакомление с настоящей Политикой и дает согласие на обработку персональных данных на условиях, изложенных ниже.</p>
+      <p class="legal-p">1.4. Оператор вправе вносить изменения в Политику. Новая редакция вступает в силу с момента ее размещения в Сервисе.</p>
+      <h3 class="legal-heading">2. Цели обработки персональных данных</h3>
+      <p class="legal-p">Оператор обрабатывает персональные данные Пользователей для следующих целей:</p>
+      <p class="legal-p">— идентификация Пользователя при оформлении и исполнении Заказа;</p>
+      <p class="legal-p">— исполнение обязательств Оператора перед Пользователем по Пользовательскому соглашению, включая приобретение и передачу Цифровых товаров;</p>
+      <p class="legal-p">— прием, рассмотрение и обработка обращений Пользователя, в том числе связанных с возвратом денежных средств;</p>
+      <p class="legal-p">— направление ответов на обращения и запросы Пользователя, уведомлений о статусе Заказа;</p>
+      <p class="legal-p">— обеспечение корректной работы Сервиса, технической поддержки, защиты от мошенничества и несанкционированного доступа;</p>
+      <p class="legal-p">— анализ использования Сервиса, улучшение его работы;</p>
+      <p class="legal-p">— направление информационных сообщений при наличии согласия Пользователя, если такое согласие требуется законом.</p>
+      <h3 class="legal-heading">3. Категории и сроки обработки персональных данных</h3>
+      <div class="legal-table">
+        <div class="legal-table-row legal-table-head">
+          <div>Персональные данные</div>
+          <div>Срок обработки</div>
+        </div>
+        <div class="legal-table-row">
+          <div>Адрес электронной почты, идентификатор Пользователя в Telegram</div>
+          <div>На период использования Сервиса и не более 5 лет после последнего обращения, если иное не установлено законом</div>
+        </div>
+        <div class="legal-table-row">
+          <div>Идентификатор учетной записи Пользователя в Игре/Платформе, сведения о Заказе</div>
+          <div>На период исполнения Заказа и не более 5 лет после его завершения (для целей защиты прав Оператора и налогового учета)</div>
+        </div>
+        <div class="legal-table-row">
+          <div>Данные, предоставленные при обращении за возвратом денежных средств (включая реквизиты для возврата)</div>
+          <div>На период рассмотрения обращения и не более 5 лет после его завершения</div>
+        </div>
+        <div class="legal-table-row">
+          <div>Технические данные (IP-адрес, сведения об устройстве, дата и время обращения)</div>
+          <div>Не более 12 месяцев</div>
+        </div>
+      </div>
+      <h3 class="legal-heading">4. Порядок обработки персональных данных</h3>
+      <p class="legal-p">4.1. Оператор получает персональные данные непосредственно от Пользователя при использовании Сервиса (оформление Заказа, обращение в поддержку, запрос на возврат).</p>
+      <p class="legal-p">4.2. Оператор хранит персональные данные в течение сроков, указанных в разделе 3, с применением организационных и технических мер защиты.</p>
+      <p class="legal-p">4.3. Доступ к персональным данным предоставляется только Оператору и лицам, привлекаемым для обеспечения работы Сервиса (платежные партнеры, техническая поддержка), в объеме, необходимом для соответствующей цели.</p>
+      <p class="legal-p">4.4. Оператор не передает персональные данные третьим лицам без согласия Пользователя, за исключением случаев, когда передача необходима для исполнения Заказа, обеспечения работы Сервиса, исполнения требований законодательства РФ либо по законному запросу государственных органов.</p>
+      <p class="legal-p">4.5. Оператор прекращает обработку и уничтожает персональные данные при достижении целей обработки, истечении сроков хранения либо отзыве согласия Пользователем, если отсутствуют иные законные основания для дальнейшей обработки.</p>
+      <h3 class="legal-heading">5. Права Пользователя</h3>
+      <p class="legal-p">Пользователь вправе:</p>
+      <p class="legal-p">— получить информацию об обработке своих персональных данных;</p>
+      <p class="legal-p">— получить доступ к своим персональным данным;</p>
+      <p class="legal-p">— потребовать уточнения, обновления или удаления персональных данных, если они неполны, устарели или неточны;</p>
+      <p class="legal-p">— в любой момент отозвать согласие на обработку персональных данных, направив обращение по адресу <a href="mailto:artem922822@yandex.ru">artem922822@yandex.ru</a>;</p>
+      <p class="legal-p">— отказаться от получения информационных сообщений;</p>
+      <p class="legal-p">— обжаловать действия или бездействие Оператора в Роскомнадзор либо в суд.</p>
+      <h3 class="legal-heading">6. Обязанности Оператора</h3>
+      <p class="legal-p">Оператор обязан обрабатывать персональные данные правомерно и добросовестно, принимать необходимые меры защиты персональных данных, рассматривать обращения Пользователей в срок, установленный Федеральным законом № 152-ФЗ (как правило, не более 30 дней), и прекращать обработку персональных данных при отзыве согласия, если отсутствуют иные законные основания для ее продолжения.</p>
+      <h3 class="legal-heading">7. Меры по защите персональных данных</h3>
+      <p class="legal-p">Оператор принимает организационные и технические меры защиты персональных данных, включая ограничение круга лиц, имеющих доступ к данным, использование средств идентификации и аутентификации, резервное копирование и иные меры, необходимые с учетом характера обрабатываемых данных.</p>
+      <h3 class="legal-heading">8. Обращения Пользователя</h3>
+      <p class="legal-p">8.1. Пользователь вправе направить Оператору обращение, запрос или отзыв согласия на обработку персональных данных по адресу электронной почты: <a href="mailto:artem922822@yandex.ru.">artem922822@yandex.ru.</a></p>
+      <p class="legal-p">8.2. Обращение должно позволять идентифицировать Пользователя (содержать адрес электронной почты или идентификатор, использованный в Сервисе).</p>
+      <p class="legal-p">8.3. Оператор рассматривает обращения и направляет ответ в сроки, предусмотренные Федеральным законом № 152-ФЗ.</p>
+      <h3 class="legal-heading">9. Заключительные положения</h3>
+      <p class="legal-p">9.1. Настоящая Политика применяется ко всем персональным данным Пользователей, полученным Оператором в рамках использования Сервиса.</p>
+      <p class="legal-p">9.2. Оператор не несет ответственности за неправомерный доступ третьих лиц к персональным данным, произошедший по вине самого Пользователя (передача учетных данных третьим лицам и т.п.), при условии что Оператор принял необходимые меры защиты.</p>
+      <h3 class="legal-heading">10. Реквизиты</h3>
+      <p class="legal-p">Индивидуальный предприниматель Ершов Артем Юрьевич ОГРНИП [УКАЗАТЬ] ИНН [УКАЗАТЬ] Адрес для связи: <a href="mailto:artem922822@yandex.ru">artem922822@yandex.ru</a></p>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <div class="bottomnav">
+    <div class="navitem active" data-view="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H5v-9H2z"/></svg>
+      <span>Главная</span>
+    </div>
+    <div class="navitem" data-view="fav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7.5-4.9-10-9.3C.5 8.1 2.3 4.5 6 4.1c2-.2 3.6.9 6 3.4 2.4-2.5 4-3.6 6-3.4 3.7.4 5.5 4 4 7.6-2.5 4.4-10 9.3-10 9.3z"/></svg>
+      <span>Избранное</span>
+      <div class="nav-badge" style="display:none;">0</div>
+    </div>
+    <div class="navitem" data-view="cart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 002 1.6h8.2a2 2 0 002-1.6L21 8H6"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+      <span>Корзина</span>
+      <div class="nav-badge" style="display:none;">0</div>
+    </div>
+    <div class="navitem" data-view="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span>Профиль</span>
+    </div>
+  </div>
+
+  <!-- ============ ADD-TO-CART CONFIRMATION ============ -->
+  <div class="cart-add-toast" id="cart-add-toast">
+    <div class="cart-add-card" id="cart-add-card">
+      <div class="cart-add-thumb" id="cart-add-thumb"></div>
+      <div class="cart-add-info">
+        <div class="cart-add-label">Добавлено в корзину</div>
+        <div class="cart-add-name" id="cart-add-name"></div>
+      </div>
+      <div class="cart-add-check">✓</div>
+      <svg class="cart-add-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+  </div>
+
+  <!-- ============ ID HELP MODAL (подсказка "где найти ID") ============ -->
+  <div class="id-help-overlay" id="id-help-overlay">
+    <div class="id-help-modal">
+      <div class="id-help-image" id="id-help-image"></div>
+      <div class="id-help-text" id="id-help-text"></div>
+      <button class="id-help-close" id="id-help-close">Закрыть</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
