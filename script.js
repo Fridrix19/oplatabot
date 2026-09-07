@@ -2493,7 +2493,7 @@ function renderGiftGrid(){
     const displayName = nameMatch ? nameMatch[1] : item.name;
     const countryLabel = nameMatch ? nameMatch[2] : null;
     return `
-    <div class="giftcard" data-idx="${idx}">
+    <div class="giftcard" data-catalog-name="${item.name.replace(/&/g,"&amp;").replace(/"/g,"&quot;")}" data-idx="${idx}">
       <div class="giftcard-cover" style="background:${itemImg ? `url('${itemImg}') center/cover no-repeat` : item.grad};">
         ${heartHTML(favId)}
         <div class="giftcard-inner">
@@ -3286,9 +3286,3 @@ document.querySelectorAll(".game-card[data-list]").forEach(card=>{
 });
 
 renderCart();
-/* Backend catalog sync */
-async function syncBackendCatalog(){try{const r=await fetch('/api/products');if(!r.ok)return;const products=await r.json();window.backendProducts=products;document.querySelectorAll('[data-product-id]').forEach(el=>{const p=products.find(x=>x.id===el.dataset.productId);if(p?.soldOut)el.classList.add('product-sold-out')})}catch(e){console.warn('Catalog sync unavailable')}}
-document.addEventListener('DOMContentLoaded',syncBackendCatalog);
-/* Apply backend stock state to existing static cards by visible product name */
-async function applyBackendStock(){try{const ps=await fetch('/api/products').then(r=>r.json());const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();document.querySelectorAll('.giftcard,.list-row,.product-card').forEach(el=>{const n=norm(el.querySelector('.giftcard-name,.product-name,.list-row-title')?.textContent);const p=ps.find(x=>n&& (norm(x.name)===n||norm(x.name).includes(n)||n.includes(norm(x.name))));if(p?.soldOut){el.classList.add('product-sold-out');el.setAttribute('aria-label','Нет в наличии')}})}catch(e){}}
-document.addEventListener('DOMContentLoaded',()=>setTimeout(applyBackendStock,500));

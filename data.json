@@ -23,6 +23,18 @@
       "code": "PLT-03805A3EBC3F5E7AC0AA",
       "paidAt": "2026-09-06T22:52:35.091Z",
       "deliveredAt": "2026-09-06T22:52:35.091Z"
+    },
+    {
+      "id": "ORD-1788741369648",
+      "userId": "demo",
+      "productId": "4b05352f-a7a5-46b6-8c05-53d8d60d2e0b",
+      "amount": 499,
+      "status": "delivered",
+      "createdAt": "2026-09-07T00:36:09.648Z",
+      "paymentUrl": "/api/payments/ORD-1788741369648",
+      "code": "PLT-DC0B4825AE40BEC175D3",
+      "paidAt": "2026-09-07T00:36:10.956Z",
+      "deliveredAt": "2026-09-07T00:36:10.956Z"
     }
   ],
   "codes": [
@@ -39,6 +51,13 @@
       "code": "PLT-03805A3EBC3F5E7AC0AA",
       "status": "used",
       "orderId": "ORD-1788735154061"
+    },
+    {
+      "id": "c_1788741370956",
+      "productId": "4b05352f-a7a5-46b6-8c05-53d8d60d2e0b",
+      "code": "PLT-DC0B4825AE40BEC175D3",
+      "status": "used",
+      "orderId": "ORD-1788741369648"
     }
   ],
   "promocodes": [],
@@ -52,7 +71,7 @@
       "id": "4b05352f-a7a5-46b6-8c05-53d8d60d2e0b",
       "name": "Карта PS Store 250 TRY (Турция)",
       "oldPrice": 573,
-      "stock": 100
+      "stock": 0
     },
     {
       "image": "/images/psstore/try/500.png",
@@ -1154,7 +1173,7 @@
       "status": "available",
       "currency": "RUB",
       "name": "60 UC",
-      "stock": 100
+      "stock": 0
     },
     {
       "category": "Каталог",
@@ -1174,7 +1193,7 @@
       "status": "available",
       "currency": "RUB",
       "name": "600 + 60 UC",
-      "stock": 100
+      "stock": 0
     },
     {
       "category": "Каталог",
