@@ -338,9 +338,7 @@ function generatePurchaseCode(){
 
 function createOrder(items, totalLabel, email){
   // Серверный тестовый заказ: код создаётся только после webhook оплаты
-  fetch('/api/products?q='+encodeURIComponent(items[0]?.name||'' )).then(r=>r.json()).then(ps=>{
-    return fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Id':window.Telegram?.WebApp?.initDataUnsafe?.user?.id||'demo'},body:JSON.stringify({productId:ps[0]?.id,name:items[0]?.name,amount:parseFloat(String(totalLabel).replace(/[^0-9.,]/g,'').replace(',','.'))||0})}).then(r=>r.json()).then(o=>{if(o.paymentUrl) location.href=o.paymentUrl});
-  }).catch(()=>{});
+  fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Id':window.Telegram?.WebApp?.initDataUnsafe?.user?.id||'demo'},body:JSON.stringify({name:items[0]?.name,amount:parseFloat(String(totalLabel).replace(/[^0-9.,]/g,'').replace(',','.'))||0})}).then(async r=>{const o=await r.json();if(!r.ok)throw new Error(o.error||'Не удалось создать заказ');if(o.paymentUrl) location.href=o.paymentUrl}).catch(e=>showToast(e.message));
   return;
   /* Кодов пополнения на позицию — ровно столько, сколько реальных карт
      было куплено. Есть два пути:
