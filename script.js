@@ -338,47 +338,7 @@ function generatePurchaseCode(){
   return `${seg()}-${seg()}-${seg()}`;
 }
 
-function createOrder(items, totalLabel, email){
-  // Серверный тестовый заказ: код создаётся только после webhook оплаты
-  fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':window.Telegram?.WebApp?.initData||''},body:JSON.stringify({name:items[0]?.name,amount:parseFloat(String(totalLabel).replace(/[^0-9.,]/g,'').replace(',','.'))||0})}).then(async r=>{const o=await r.json();if(!r.ok)throw new Error(o.error||'Не удалось создать заказ');if(o.botUrl){showToast('Оплатите товар в Telegram');setTimeout(()=>location.href=o.botUrl,700);return}showToast('Укажите BOT_USERNAME в настройках сервера')}).catch(e=>showToast(e.message));
-  return;
-  /* Кодов пополнения на позицию — ровно столько, сколько реальных карт
-     было куплено. Есть два пути:
-     — presetCodes: готовый список {code, label} — используется для игр,
-       оплаченных картами пополнения PS Store, чтобы под игрой сразу были
-       видны все выпавшие карты и номинал каждой (см. чекаут корзины ниже);
-     — codesCount: просто сколько одинаковых кодов сгенерировать, без
-       подписи номинала. По умолчанию — 1 код на позицию: сервисы
-       пополнения (донат-коды, услуги по UID) выдают один код на заказ
-       независимо от количества/qty. */
-  const itemsWithCodes = items.map(it=>{
-    let codes = [];
-    let codeLabels = null;
-    if(it.needsCode !== false){
-      if(it.presetCodes && it.presetCodes.length){
-        codes = it.presetCodes.map(c=> c.code);
-        codeLabels = it.presetCodes.map(c=> c.label);
-      } else {
-        codes = Array.from({length: it.codesCount || 1}, ()=> generatePurchaseCode());
-      }
-    }
-    return {...it, codes, codeLabels};
-  });
-  const order = {
-    id: orderIdSeq++,
-    date: new Date(),
-    items: itemsWithCodes,
-    total: totalLabel,
-    email: email || null,
-    status: "processing"
-  };
-  orders.unshift(order);
-  setTimeout(()=>{
-    order.status = "paid";
-    if(currentView === "view-purchases") renderPurchases();
-  }, 6000 + Math.random()*4000);
-  return order;
-}
+function createOrder(items,totalLabel,email){return window.checkoutOrder(items,totalLabel,email);}
 
 function formatOrderDate(d){
   const dd = String(d.getDate()).padStart(2,"0");
@@ -514,6 +474,8 @@ function isInCart(name){
 }
 
 function addToCart(game){
+  return window.buySingleItem(game);
+
   const existing = cart.find(c => c.name === game.name);
   if(existing){
     existing.qty += 1;
@@ -626,6 +588,8 @@ function calcCardsForAmount(code, targetAmount){
 }
 
 function renderCart(){
+  return;
+
   const container = document.getElementById("cart-items");
   const headSub = document.getElementById("cx-head-sub");
   const promoToggle = document.getElementById("cx-promo-toggle");
@@ -936,12 +900,12 @@ document.getElementById("cart-buy-btn").addEventListener("click", ()=>{
     `${formatPrice(getCartPayTotal())} ₽`,
     email
   );
-  showToast("Заказ оформлен");
+
   cart = [];
   cartPromo = {code:"", discountPercent:0};
   cartPayMethod = "sbp";
   renderCart();
-  setTimeout(()=> hideSubView(), 900);
+
 });
 
 /* Строит список выпадающих карт пополнения под игрой: по одному коду на
@@ -1236,12 +1200,12 @@ function updateProductBuyState(){
   if(isInCart(name)){
     buyBtn.classList.add("buy-btn-added");
     buyBtn.style.background = "var(--green)";
-    buyBtn.textContent = "Перейти в корзину";
+    buyBtn.textContent = "Мои покупки";
     buyBtn.onclick = ()=> goToCart();
   } else {
     buyBtn.classList.remove("buy-btn-added");
     buyBtn.style.background = "";
-    buyBtn.textContent = "Добавить в корзину";
+    buyBtn.textContent = "Купить";
     buyBtn.onclick = ()=>{
       addToCart({
         name,
@@ -1771,8 +1735,8 @@ function goToTopupPayment(idx){
         `${formatPrice(finalPrice)} ₽`,
         email
       );
-      showToast("Заказ оформлен");
-      setTimeout(()=> hideSubView(), 900);
+
+
     }
   });
 }
@@ -1899,8 +1863,8 @@ document.getElementById("topup-custom-buy-btn").addEventListener("click", ()=>{
     `${formatPrice(total)} ₽`,
     ""
   );
-  showToast("Заказ оформлен");
-  setTimeout(()=> hideSubView(), 900);
+
+
 });
 
 document.getElementById("topup-back").addEventListener("click", ()=> goBack());
@@ -2545,8 +2509,8 @@ function openGiftCardPayment(catKey, country, idx){
         `${formatPrice(finalPrice)} ₽`,
         email
       );
-      showToast("Заказ оформлен");
-      setTimeout(()=> hideSubView(), 900);
+
+
     }
   });
 }
@@ -2683,8 +2647,8 @@ function completeTgStarsPurchase(){
     `${formatPrice(finalPrice)} ₽`,
     null
   );
-  showToast(`Оплачено: ${item.amount} звёзд для ${username}`);
-  setTimeout(()=> hideSubView(), 900);
+
+
 }
 
 document.getElementById("tgstars-sbp-btn").addEventListener("click", ()=> completeTgStarsPurchase());
@@ -2840,8 +2804,8 @@ function completeTgPremPurchase(){
     `${formatPrice(finalPrice)} ₽`,
     null
   );
-  showToast(`Оплачено: Telegram Premium (${item.amount}) для ${username}`);
-  setTimeout(()=> hideSubView(), 900);
+
+
 }
 
 document.getElementById("tgprem-sbp-btn").addEventListener("click", ()=> completeTgPremPurchase());
@@ -2913,7 +2877,7 @@ let currentView = "view-home";
 let viewStack = [];
 
 function tabNameForView(id){
-  const map = {"view-home":"home", "view-fav":"fav", "view-cart":"cart", "view-profile":"profile"};
+  const map = {"view-home":"home", "view-fav":"fav", "view-purchases":"purchases", "view-profile":"profile"};
   return map[id] || null;
 }
 
@@ -2961,7 +2925,7 @@ function syncCheckoutMode(id){
    оплаты (единый стиль для всех этих экранов). */
 function syncCartBuyMode(id){
   const isCartWithItems = id === "view-cart" && cart.length > 0;
-  document.getElementById("app").classList.toggle("cart-buy-mode", isCartWithItems);
+  document.getElementById("app").classList.remove("cart-buy-mode");
 }
 
 /* На страницах "Пользовательское соглашение" и "Политика конфиденциальности"
@@ -3017,7 +2981,7 @@ function hideSubView(){
 const titles = {
   home: ["MetraCode", "магазин ключей и подписок"],
   fav: ["Избранное", "сохранённые товары"],
-  cart: ["Корзина", "1 товар"],
+  purchases: ["Мои покупки", "история заказов"],
   profile: ["Профиль", "аккаунт и заказы"]
 };
 
@@ -3246,11 +3210,11 @@ function updateSubDetailBuyButton(){
   const buyBtn = document.getElementById("subdetail-buy-btn");
 
   if(isInCart(name)){
-    buyBtn.textContent = "Перейти в корзину";
+    buyBtn.textContent = "Мои покупки";
     buyBtn.style.background = "var(--green)";
     buyBtn.onclick = ()=> goToCart();
   } else {
-    buyBtn.textContent = "Добавить в корзину";
+    buyBtn.textContent = "Купить";
     buyBtn.style.background = "";
     buyBtn.onclick = ()=>{
       addToCart({

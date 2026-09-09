@@ -791,3 +791,12 @@
 .product-sold-out{position:relative;cursor:not-allowed!important;overflow:hidden}
 .product-sold-out>*{filter:blur(2px) grayscale(1);opacity:.5}
 .product-sold-out::after{content:'Нет в наличии';position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(10,12,18,.45);color:white;font-weight:700;font-size:16px;pointer-events:none}
+.purchase-card{padding:20px!important;overflow-wrap:anywhere}
+.purchase-title{font-weight:700;font-size:17px;margin:0 0 8px}
+.purchase-id,.purchase-date{font-size:12px;opacity:.65}
+.purchase-status{display:inline-block;padding:5px 10px;border-radius:20px;background:#34456d;color:#c4d6ff;font-size:12px;margin:4px 0}
+.purchase-card[data-status="paid"] .purchase-status{background:#534423;color:#ffe6a6}
+.purchase-card[data-status="delivered"] .purchase-status{background:#194338;color:#a9f3d1}
+.purchase-card[data-status="cancelled"] .purchase-status{background:#43333a;color:#e7bac6}
+.purchase-amount{font-weight:700;margin:8px 0}
+.purchase-card code{display:block;padding:12px;background:#080f1d;border-radius:8px;white-space:pre-wrap}

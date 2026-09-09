@@ -1,1 +1,19 @@
-{"name":"platas-store","version":"1.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"express":"^4.21.2"}}
+{
+  "name": "platas-store",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-workflow.cjs && node test-telegram.cjs && node test-storage.cjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.14"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

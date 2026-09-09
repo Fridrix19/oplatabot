@@ -32,7 +32,8 @@ function attach(app, db, save) {
   app.get('/api/me',(req,res)=>{const u=ensure(req);save();res.json(u);});
   app.get('/api/me/orders',(req,res)=>res.json(db.orders.filter(o=>String(o.userId)===req.telegramUser.id).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map(o=>{
     const product=db.products.find(p=>p.id===o.productId);
-    return {id:o.id,productName:o.productName||product?.name||'Товар',amount:o.amount,status:o.status,createdAt:o.createdAt,code:o.status==='delivered'?o.code:null};
+    const status=['pending','awaiting_payment'].includes(o.status)&&Date.parse(o.expiresAt)<=Date.now()?'cancelled':o.status;
+    return {id:o.id,productName:o.productName||product?.name||'Товар',amount:o.amount,status,createdAt:o.createdAt,code:o.status==='delivered'?o.code:null,fulfillmentType:o.fulfillmentType,playerId:o.playerId,zoneId:o.zoneId,gameServer:o.gameServer,category:o.category,expiresAt:o.expiresAt,paymentUrl:status==='awaiting_payment'?o.paymentUrl:null};
   })));
   app.put('/api/me/favorites/:id',(req,res)=>{
     const id=req.params.id, data=req.body;
