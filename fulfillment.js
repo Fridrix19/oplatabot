@@ -72,14 +72,11 @@ function attach(app,db,save,admin,transport){
   }catch(e){next(e);}});
   app.post('/api/payments/:id/webhook',(req,res)=>res.status(404).json({error:'Настоящая платёжная система пока не подключена'}));
   app.patch('/api/admin/orders/:id',admin,async(req,res,next)=>{try{
-    const o=db.orders.find(o=>o.id===req.params.id);if(!o)return res.sendStatus(404);
-    if(o.status==='delivered')return res.status(409).json({error:'Заказ уже выполнен'});
-    if(o.status!=='paid')return res.status(409).json({error:'Выдача возможна только после оплаты'});
-    const code=String(req.body.code||'').trim();
     if(req.body.action!=='deliver')return res.status(400).json({error:'Выберите выдачу'});
-    if(o.fulfillmentType!=='topup'&&(!code||code.length>2000))return res.status(400).json({error:'Введите код'});
-    if(code&&db.orders.some(other=>other.id!==o.id&&other.code===code&&other.status==='delivered'))return res.status(409).json({error:'Этот код уже выдан другому заказу'});
-    o.code=o.fulfillmentType==='topup'?null:code;o.status='delivered';o.deliveredAt=new Date().toISOString();await save();res.json(o);
+    const o=db.orders.find(o=>o.id===req.params.id);
+    try {require('./order-delivery').deliver(db,o,req.body.code,'admin');}
+    catch(e){if(e.status)return res.status(e.status).json({error:e.message});throw e;}
+    await save();res.json(o);
   }catch(e){next(e);}});
   let ticking=false;
   async function tick(){if(ticking)return;ticking=true;try{
@@ -97,6 +94,7 @@ function attach(app,db,save,admin,transport){
       db.telegramOffset=u.update_id+1;await save();
     }
   }catch(e){console.error('Telegram updates:',e.message);}finally{polling=false;}}
-  return Object.assign((run=fn=>fn())=>{const schedule=(fn,ms)=>{const loop=()=>run(fn).catch(e=>console.error('Order worker:',e.message)).finally(()=>setTimeout(loop,ms));setTimeout(loop,ms);};schedule(tick,10000);schedule(poll,7000);},{tick,poll});
+  const operator=require('./operator-bot').attach(db,save);
+  return Object.assign((run=fn=>fn())=>{const schedule=(fn,ms)=>{const loop=()=>run(fn).catch(e=>console.error('Order worker:',e.message)).finally(()=>setTimeout(loop,ms));setTimeout(loop,ms);};schedule(tick,10000);schedule(poll,7000);schedule(operator.tick,10000);schedule(operator.poll,7000);},{tick,poll});
 }
 module.exports={attach};

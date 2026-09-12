@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const {deliver}=require('./order-delivery');
+process.env.ORDERS_BOT_TOKEN='operator-test';process.env.BOT_TOKEN='customer-test';process.env.ADMIN_TELEGRAM_ID='42';
+const db={orders:[{id:'pending',status:'awaiting_payment'},{id:'code',status:'paid',productName:'Card',userId:'8'},{id:'top',status:'paid',fulfillmentType:'topup',playerId:'123'},{id:'old',status:'delivered'}]};
+const calls=[];let updates=[],id=100;
+const worker=require('./operator-bot').attach(db,async()=>{},async(method,args)=>{calls.push({method,args});return method==='getUpdates'?updates:{message_id:++id};});
+const reply=(from,order,text,update_id)=>({update_id,message:{from:{id:from},chat:{id:from,type:'private'},text,reply_to_message:{message_id:order.operatorMessageId}}});
+(async()=>{
+ await worker.tick();assert.equal(calls.filter(c=>c.method==='sendMessage').length,2);
+ await worker.tick();assert.equal(calls.filter(c=>c.method==='sendMessage').length,2);
+ const code=db.orders[1],top=db.orders[2];
+ updates=[reply(99,code,'STOLEN',1)];await worker.poll();assert.equal(code.status,'paid');
+ updates=[reply(42,code,'VALID-CODE',2)];await worker.poll();assert.equal(code.code,'VALID-CODE');assert.equal(code.status,'delivered');
+ updates=[reply(42,code,'SECOND',3)];await worker.poll();assert.equal(code.code,'VALID-CODE');
+ assert.throws(()=>deliver(db,code,'ADMIN-SECOND','admin'),/уже выполнен/);
+ updates=[{update_id:4,callback_query:{id:'cb',from:{id:42},data:'done:top',message:{message_id:top.operatorMessageId,chat:{id:42,type:'private'}}}}];await worker.poll();assert.equal(top.status,'delivered');assert.equal(top.code,null);
+ await worker.tick();assert.equal(calls.filter(c=>c.method==='editMessageText').length,2);
+ assert.equal(db.operatorOffset,5);
+ console.log('PASS: paid-only operator queue, access control, reply delivery, duplicate protection, topup and message updates');
+})().catch(e=>{console.error(e);process.exitCode=1;});
