@@ -6,7 +6,7 @@ function migrate(db, entries=require('./catalog-meta.json')) {
   let added=0;
   for(const entry of entries){
     if(names.has(norm(entry.name)) || (entry.shortName && names.has(norm(entry.shortName))))continue;
-    db.products.push({id:'catalog_'+crypto.createHash('sha256').update(entry.name).digest('hex').slice(0,24),name:entry.name,category:entry.category,image:entry.image||'',price:entry.price||0,currency:'RUB',stock:0,status:'available',createdAt:new Date().toISOString()});
+    db.products.push({id:'catalog_'+crypto.createHash('sha256').update(entry.name).digest('hex').slice(0,24),name:entry.name,category:entry.category,image:entry.image||'',price:entry.price||0,currency:'RUB',stock:100,status:'available',createdAt:new Date().toISOString()});
     names.add(norm(entry.name));added++;
   }
   return added;

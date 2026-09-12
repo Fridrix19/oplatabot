@@ -29,7 +29,7 @@
   renderPurchases=function(){
     const list=document.getElementById('purchases-list');if(!list)return;
     list.replaceChildren();
-    if(!purchases.length){const p=document.createElement('p');p.textContent=ready?'Пока нет покупок':'Откройте Mini App в Telegram для просмотра покупок';list.append(p);return;}
+    if(!purchases.length){const p=document.createElement('p');p.textContent='Пока нет покупок';list.append(p);const b=document.createElement('button');b.className='empty-btn';b.textContent='Каталог';b.onclick=()=>hideSubView();list.append(b);return;}
     for(const order of purchases){
       const card=document.createElement('article');card.className='po-card purchase-card';card.dataset.status=order.status;
       for(const [index,text] of [order.productName,`Заказ ${order.id}`,labels[order.status]||order.status,`${order.amount} ₽`,new Date(order.createdAt).toLocaleString('ru-RU')].entries()){const p=document.createElement('p');p.className=['purchase-title','purchase-id','purchase-status','purchase-amount','purchase-date'][index];p.textContent=text;card.append(p);}
@@ -45,7 +45,7 @@
     const version=favoritesVersion;
     try{
       const [me,history]=await Promise.all([api('/api/me'),api('/api/me/orders')]);
-      ready=true;status.textContent='Профиль сохранён на сервере';
+      ready=true;status.textContent='';
       document.querySelector('.profile-name').textContent=[me.first_name,me.last_name].filter(Boolean).join(' ')||me.username||'Пользователь';
       document.querySelector('.profile-id').textContent='Telegram ID: '+me.id;
       document.querySelector('#view-profile .avatar').textContent=(me.first_name||me.username||'П').slice(0,1);

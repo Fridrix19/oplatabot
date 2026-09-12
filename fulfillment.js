@@ -76,6 +76,7 @@ function attach(app,db,save,admin,transport){
     const o=db.orders.find(o=>o.id===req.params.id);
     try {require('./order-delivery').deliver(db,o,req.body.code,'admin');}
     catch(e){if(e.status)return res.status(e.status).json({error:e.message});throw e;}
+    const receipt=String(req.body.receiptText||'').trim().slice(0,4000); if(receipt)o.receiptText=receipt;
     await save();res.json(o);
   }catch(e){next(e);}});
   let ticking=false;
