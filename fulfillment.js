@@ -87,7 +87,7 @@ function attach(app,db,save,admin,transport){
   }finally{ticking=false;}}
   let polling=false;
   async function poll(){if(polling||!process.env.BOT_TOKEN)return;polling=true;try{
-    const updates=await telegram('getUpdates',{offset:db.telegramOffset||0,timeout:5});
+    const updates=await telegram('getUpdates',{offset:db.telegramOffset||0,timeout:0});
     for(const u of updates||[]){const m=u.message;const match=m?.text?.match(/^\/start(?:@\w+)?(?:\s+pay_(ORD-[\w-]+))?$/);
       if(match&&m.chat.type==='private'){
         const o=db.orders.find(o=>o.id===match[1]&&String(o.userId)===String(m.from.id));

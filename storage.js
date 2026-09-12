@@ -17,9 +17,14 @@ async function openStorage(db,file){
     },
     run(task){
       const work=queue.then(async()=>{
-        if(client){await client.query('BEGIN');replace(db,(await client.query('SELECT data FROM store WHERE id=1 FOR UPDATE')).rows[0].data);}
-        try{const result=await task();if(client)await client.query('COMMIT');return result;}
-        catch(e){if(client)await client.query('ROLLBACK');throw e;}
+        let before=JSON.stringify(db),begun=false;
+        try{
+          if(client){await client.query('BEGIN');begun=true;replace(db,(await client.query('SELECT data FROM store WHERE id=1 FOR UPDATE')).rows[0].data);before=JSON.stringify(db);}
+          const result=await task();if(client)await client.query('COMMIT');return result;
+        }catch(e){
+          if(begun)await client.query('ROLLBACK').catch(()=>{});
+          replace(db,JSON.parse(before));throw e;
+        }
       });
       queue=work.catch(()=>{});return work;
     }

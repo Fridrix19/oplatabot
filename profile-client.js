@@ -1,7 +1,7 @@
 (() => {
   const escape = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pending=new Set();
-  let ready=false, refreshBusy=false, purchases=[];
+  let ready=false, refreshBusy=false, purchases=[],favoritesVersion=0;
   const status=document.createElement('p');status.setAttribute('role','status');
   document.querySelector('#view-profile .profile-head')?.after(status);
   async function api(url,method='GET',body) {
@@ -18,11 +18,12 @@
     if(!ready){showToast('Откройте профиль в Telegram и дождитесь загрузки');return;}
     if(pending.has(id))return;
     pending.add(id);
+    favoritesVersion++;
     try{
       if(favorites[id]){await api('/api/me/favorites/'+encodeURIComponent(id),'DELETE');delete favorites[id];}
       else {const f=favoriteCandidates[id];if(!f)return;await api('/api/me/favorites/'+encodeURIComponent(id),'PUT',f);favorites[id]=f;}
       hearts();
-    }catch(e){showToast(e.message);}finally{pending.delete(id);}
+    }catch(e){showToast(e.message);}finally{pending.delete(id);favoritesVersion++;}
   };
   const labels={awaiting_payment:'Ожидает оплаты',pending:'Ожидает оплаты',delivered:'Выдано',paid:'Оплачено',expired:'Отменено',cancelled:'Отменено',error:'Ошибка выдачи',failed:'Ошибка оплаты'};
   renderPurchases=function(){
@@ -41,13 +42,14 @@
   };
   async function refresh(){
     if(refreshBusy)return;refreshBusy=true;
+    const version=favoritesVersion;
     try{
       const [me,history]=await Promise.all([api('/api/me'),api('/api/me/orders')]);
       ready=true;status.textContent='Профиль сохранён на сервере';
       document.querySelector('.profile-name').textContent=[me.first_name,me.last_name].filter(Boolean).join(' ')||me.username||'Пользователь';
       document.querySelector('.profile-id').textContent='Telegram ID: '+me.id;
       document.querySelector('#view-profile .avatar').textContent=(me.first_name||me.username||'П').slice(0,1);
-      if(!pending.size){favorites=Object.fromEntries(Object.entries(me.favorites).map(([id,f])=>[id,Object.fromEntries(Object.entries(f).map(([k,v])=>[k,escape(v)]))]));hearts();}
+      if(!pending.size&&version===favoritesVersion){favorites=Object.fromEntries(Object.entries(me.favorites).map(([id,f])=>[id,Object.fromEntries(Object.entries(f).map(([k,v])=>[k,escape(v)]))]));hearts();}
       purchases=history;renderPurchases();
     }catch(e){status.textContent=e.message;if(!ready)renderPurchases();}finally{refreshBusy=false;}
   }

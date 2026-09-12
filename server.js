@@ -17,6 +17,7 @@ function user(req){return req.telegramUser.id;}
 const ADMIN_PASSWORD=process.env.ADMIN_TOKEN||'55555';
 function admin(req,res,next){if(req.headers.authorization!==`Bearer ${ADMIN_PASSWORD}`)return res.status(401).json({error:'Неверный пароль администратора'});next();}
 const startWorkers=require('./fulfillment').attach(app,db,save,admin);
+app.get('/api/health',(req,res)=>res.json({status:'ok',storage:process.env.DATABASE_URL?'postgresql':'json',workflow:'manual-v2'}));
 app.get('/api/products',(req,res)=>{let q=(req.query.q||'').toLowerCase();res.json(db.products.filter(p=>(!q||p.name.toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q))).map(p=>({...p,available:(Number.isFinite(p.stock)?p.stock:db.codes.filter(c=>c.productId===p.id&&c.status==='free').length),soldOut:(Number.isFinite(p.stock)?p.stock:db.codes.filter(c=>c.productId===p.id&&c.status==='free').length)<=0||p.status==='disabled'})));});
 app.get('/api/products/:id',(req,res)=>{let p=db.products.find(x=>x.id===req.params.id);if(!p)return res.sendStatus(404);res.json({...p,available:(Number.isFinite(p.stock)?p.stock:db.codes.filter(c=>c.productId===p.id&&c.status==='free').length),soldOut:(Number.isFinite(p.stock)?p.stock:db.codes.filter(c=>c.productId===p.id&&c.status==='free').length)<=0||p.status==='disabled'});});
 app.get('/api/orders',(req,res)=>res.json(db.orders.filter(o=>o.userId===user(req))));
