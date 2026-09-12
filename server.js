@@ -1,6 +1,7 @@
 try{process.loadEnvFile();}catch(e){if(e.code!=='ENOENT')throw e;}
 const express=require('express');const fs=require('fs');const path=require('path');const crypto=require('crypto');
-const app=express();app.use(express.json());app.use((req,res,next)=>{if(req.path.startsWith('/api/'))return next();if(req.path.startsWith('/images/')||['/','/index.html','/admin.html','/payment.html','/script.js','/styles.css','/stock-sync.js','/profile-client.js','/admin-orders.js','/checkout.js'].includes(req.path))return express.static(__dirname)(req,res,next);res.sendStatus(404);});
+// Public catalog search script contains no account data.
+const app=express();app.use(express.json());app.use((req,res,next)=>{if(req.path.startsWith('/api/'))return next();if(req.path.startsWith('/images/')||['/','/index.html','/admin.html','/payment.html','/script.js','/styles.css','/stock-sync.js','/profile-client.js','/admin-orders.js','/checkout.js','/catalog-search.js'].includes(req.path))return express.static(__dirname)(req,res,next);res.sendStatus(404);});
 const file=process.env.DATA_FILE||path.join(__dirname,'data.json');
 const seed=JSON.parse(fs.readFileSync(path.join(__dirname,'data.json'),'utf8'));
 let db=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{products:seed.products,codes:[],orders:[],promocodes:[],users:{},stockInitialized:true};

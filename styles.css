@@ -59,6 +59,20 @@
   /* ---------- Search ---------- */
   .searchbar{margin:4px 16px 18px; background:var(--card-2); border-radius:14px; padding:12px 14px; display:flex; align-items:center; gap:10px; color:var(--text-dim); font-size:15px;}
   .searchbar svg{width:18px; height:18px; flex-shrink:0;}
+  .searchbar input{min-width:0;flex:1;width:100%;border:0;background:transparent;color:var(--text);font:inherit;outline:none;}
+  .searchbar input::placeholder{color:var(--text-dim);}
+  .searchbar:focus-within{box-shadow:0 0 0 2px #676dff;}
+  .searchbar button{border:0;background:transparent;color:var(--text-dim);font-size:24px;cursor:pointer;}
+  #view-home.search-active > :not(.searchbar):not(#search-results){display:none;}
+  #search-results{margin:0 16px 24px;}
+  #search-count{color:var(--text-dim);font-size:14px;}
+  #search-items{display:grid;gap:10px;}
+  .search-result{display:flex;align-items:center;gap:14px;width:100%;padding:12px;text-align:left;border:1px solid transparent;border-radius:16px;background:var(--card-2);color:var(--text);font:inherit;cursor:pointer;}
+  .search-result:hover,.search-result:focus-visible{border-color:#676dff;outline:none;}
+  .search-result img{width:58px;height:66px;object-fit:cover;border-radius:9px;flex-shrink:0;}
+  .search-result span{min-width:0;overflow-wrap:anywhere;}
+  .search-result strong,.search-result small{display:block;}
+  .search-result small{margin-top:6px;color:var(--text-dim);}
 
   /* ---------- Promo banner ---------- */
   .promo-wrap{margin:0 0 18px; padding-left:16px; position:relative;}

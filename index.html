@@ -17,8 +17,10 @@
 
       <div class="searchbar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        Найти игру или подписку
+        <input id="catalog-search" type="search" placeholder="Найти игру или подписку" aria-label="Поиск по каталогу" autocomplete="off" aria-controls="search-results">
+        <button id="search-clear" type="button" aria-label="Очистить поиск" hidden>×</button>
       </div>
+      <section id="search-results" aria-label="Результаты поиска" hidden><p id="search-count" role="status"></p><div id="search-items"></div></section>
 
       <div class="hero-banner-wrap">
         <div class="hero-cta" id="hero-banner" onclick="openTopup('steam')">
@@ -820,5 +822,6 @@
 <script src="stock-sync.js"></script>
 <script src="profile-client.js"></script>
 <script src="checkout.js"></script>
+<script src="catalog-search.js"></script>
 </body>
 </html>
