@@ -32,4 +32,4 @@ app.post('/api/admin/stock',admin,(req,res)=>{let n=Math.max(0,Number(req.body.q
 
 
 app.use((err,req,res,next)=>{console.error('Request failed:',err.message);if(!res.headersSent)res.status(500).json({error:'Не удалось выполнить действие'});});
-require('./storage').openStorage(db,file).then(storage=>{store=storage;app.listen(process.env.PORT||3000,()=>{console.log('Platas API ready');if(process.env.DISABLE_WORKERS!=='1')startWorkers(transaction);});}).catch(e=>{console.error('Storage startup failed:',e.message);process.exit(1);});
+require('./storage').openStorage(db,file).then(async storage=>{store=storage;await transaction(async()=>{const added=require('./catalog-migration').migrate(db);if(added){await save();console.log('Catalog variants added:',added);}});app.listen(process.env.PORT||3000,()=>{console.log('Platas API ready');if(process.env.DISABLE_WORKERS!=='1')startWorkers(transaction);});}).catch(e=>{console.error('Storage startup failed:',e.message);process.exit(1);});

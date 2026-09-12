@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "node test-workflow.cjs && node test-telegram.cjs && node test-storage.cjs && node test-storage-failure.cjs && node test-operator.cjs"
+    "test": "node test-workflow.cjs && node test-telegram.cjs && node test-storage.cjs && node test-storage-failure.cjs && node test-operator.cjs && node test-catalog-migration.cjs"
   },
   "dependencies": {
     "express": "^4.21.2",

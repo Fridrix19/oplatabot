@@ -9,7 +9,7 @@
       const label = card.querySelector('.giftcard-name,.topup-grid-name,.product-name');
       const country = card.querySelector('.giftcard-country')?.textContent;
       const name = card.dataset.catalogName || (label?.textContent + (country ? ` (${country})` : ''));
-      const product = byId.get(card.dataset.productId) || byName.get(norm(name));
+      const product = byId.get(card.dataset.productId) || byName.get(norm(name)) || (name?.includes(' — ') ? byName.get(norm(name.split(' — ').slice(1).join(' — '))) : null);
       if (!product) return;
       card.dataset.productId = product.id;
       card.classList.toggle('product-sold-out', product.soldOut);
@@ -28,6 +28,7 @@
     finally { busy = false; }
   }
   document.addEventListener('click', event => {
+    if(event.target.closest('.card-info,.card-heart')) return;
     if (event.target.closest('.product-sold-out')) {
       event.preventDefault(); event.stopImmediatePropagation();
     }

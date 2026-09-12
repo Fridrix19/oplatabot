@@ -11,10 +11,13 @@
     const add = (name, category, img, key, open) => rows.push({name, category, img, open, text:normalize(`${name} ${category} ${aliases[key] || ''}`)});
     for (const [key, items] of Object.entries(games)) items.forEach((item, i) => add(item.name, 'Игры', item.img, key, () => openProduct(key, i)));
     for (const [key, service] of Object.entries(donateServices)) {
-      const category = digitalSubscriptionKeys.includes(key) ? 'Подписки' : 'Пополнение';
+      const category = digitalSubscriptionKeys.includes(key) ? 'Цифровые сервисы' : 'Пополнение';
       add(service.name, category, service.img, key, () => openTopup(key));
-      const packages = service.variants ? service.variants.flatMap(v => v.packages || []) : service.packages || [];
-      packages.forEach(item => add(`${service.name} — ${item.name}`, category, item.img || service.img, key, () => openTopup(key)));
+      const groups = service.variants ? [...service.variants] : [{key:'direct',packages:service.packages||[]}];
+      if(service.codesCatalog) groups.push({key:'codes',packages:service.codesCatalog.items||[]});
+      groups.forEach(group => (group.packages||[]).forEach(item => add(`${service.name} — ${item.name}`, category, item.img || service.img, key, () => {
+        openTopup(key); topupMode=group.key; renderTopupModeTabs(); updateTopupPkgLabel(); renderTopupPackages();
+      })));
     }
     for (const [key, catalog] of Object.entries(giftCatalogs)) {
       add(catalog.title, 'Карты и подписки', catalog.img, key, () => openGiftCards(key));

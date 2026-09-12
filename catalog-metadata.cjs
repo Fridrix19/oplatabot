@@ -5,8 +5,9 @@ function literal(name){const start=src.indexOf('const '+name+' = ');const end=sr
 const cards=literal('giftCatalogs'),services=literal('donateServices'),games=literal('games');const entries=[];
 for(const [key,c] of Object.entries(cards))for(const group of c.countries||[{items:c.items}])for(const p of group.items||[])entries.push({name:p.name,category:c.title||key,image:p.img||c.img||'',price:p.price,fulfillmentType:key==='tgstars'?'topup':'code'});
 for(const [key,s] of Object.entries(services)){
-  const packages=[...(s.packages||[]),...Object.values(s).filter(v=>v&&typeof v==='object'&&Array.isArray(v.packages)).flatMap(v=>v.packages)];
+  const packages=[...(s.packages||[]),...(s.variants||[]).flatMap(v=>v.packages||[])];
   for(const p of packages)entries.push({name:s.name+' — '+p.name,shortName:p.name,category:s.name,image:p.img||s.img||'',price:p.price,fulfillmentType:s.idLabel?'topup':'code'});
+  for(const p of s.codesCatalog?.items||[])entries.push({name:p.name,category:s.name,image:p.img||s.img||'',price:p.price,fulfillmentType:s.idLabel?'topup':'code'});
   if(s.customAmount)entries.push({name:s.name,category:s.name,image:s.img||'',fulfillmentType:'topup',customAmount:true});
 }
 for(const list of Object.values(games))for(const p of list)entries.push({name:p.name,category:'Игры',image:p.img||'',fulfillmentType:'code'});

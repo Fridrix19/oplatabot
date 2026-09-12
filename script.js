@@ -22,6 +22,22 @@ function bindHearts(container){
   });
 }
 
+function infoHTML(idx){
+  return `<div class="card-info" data-info-idx="${idx}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
+  </div>`;
+}
+
+function bindInfoButtons(container, pkgs){
+  container.querySelectorAll(".card-info").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      const p = pkgs[parseInt(btn.dataset.infoIdx, 10)];
+      if(p && p.info) openPkgInfo(p.name, p.info);
+    });
+  });
+}
+
 function toggleFavoriteById(id, el){
   return window.profileFavoritesToggle?.(id);
 
@@ -90,13 +106,25 @@ function openFavoriteItem(id){
   if(type === "game"){
     openProduct(parts[1], parseInt(parts[2],10));
   } else if(type === "donate"){
+    if(!donateServices[parts[1]]) return showToast('Этот сервис больше не представлен в каталоге');
     openTopup(parts[1]);
   } else if(type === "giftcard"){
     openGiftCardPayment(parts[1], parts[2] === "_" ? null : parts[2], parseInt(parts[3],10));
   } else if(type === "topuppkg"){
-    currentTopup = parts[1];
-    topupMode = parts[2];
-    goToTopupPayment(parseInt(parts[3],10));
+    const svc = donateServices[parts[1]];
+    if(!svc) return showToast('Этот сервис больше не представлен в каталоге');
+    // Resolve saved packages by their name: catalog edits can shift array indices.
+    const decoder = document.createElement('textarea');
+    decoder.innerHTML = favorites[id]?.name || '';
+    const savedName = decoder.value;
+    const groups = svc.variants ? svc.variants.map(v=>({key:v.key,packages:v.packages||[]})) : [{key:'direct',packages:svc.packages||[]}];
+    if(svc.codesCatalog) groups.push({key:'codes',packages:svc.codesCatalog.items||[]});
+    for(const group of groups){
+      const index = group.packages.findIndex(p=>(group.key==='codes'?p.name:`${svc.name} — ${p.name}`)===savedName);
+      if(index<0) continue;
+      currentTopup=parts[1]; topupMode=group.key; goToTopupPayment(index); return;
+    }
+    return showToast('Этот вариант больше не представлен в каталоге');
   }
 }
 
@@ -135,7 +163,7 @@ const giftCatalogs = {
     title:"PS Store", logo:"🎮", img:"images/psstore/logo.jpg",
     label:"Выберите номинал карты PS Store. Код придёт после оплаты — активируйте его в аккаунте выбранного региона.",
     countries:[
-      {code:"TR", name:"Турция", label:"Покупайте карты PS Store для Турецкого региона и закупайтесь эксклюзивами на PS4 и PS5. Активация только на аккаунте региона Турция. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятно провести время за новой игрой!", 
+      {code:"TR", name:"Турция", label:"Покупайте карты PS Store для Турецкого региона и закупайтесь эксклюзивами на PS4 и PS5. Активация только на аккаунте региона Турция. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятно провести время за новой игрой!",
 items:[
         {region:"TRY", amount:"250", price:499, old:573,img:"images/psstore/try/250.png", name:"Карта PS Store 250 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#B01E0A)"},
         {region:"TRY", amount:"500", price:999, old:1132,img:"images/psstore/try/500.png", name:"Карта PS Store 500 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#B01E0A)"},
@@ -148,7 +176,7 @@ items:[
         {region:"TRY", amount:"4000", price:7790, old:9056,img:"images/psstore/try/4000.png", name:"Карта PS Store 4000 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#B01E0A)"},
         {region:"TRY", amount:"5000", price:9749, old:11320,img:"images/psstore/try/5000.png", name:"Карта PS Store 5000 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#B01E0A)"},
       ]},
-      {code:"IN", name:"Индия", label:"Покупайте карты PS Store для региона Индия и закупайтесь топовыми играми на PS4 и PS5. Активация только на аккаунте региона Индия. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем удачной игры!", 
+      {code:"IN", name:"Индия", label:"Покупайте карты PS Store для региона Индия и закупайтесь топовыми играми на PS4 и PS5. Активация только на аккаунте региона Индия. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем удачной игры!",
 items:[
         {region:"INR", amount:"1000", price:1189, old:1275,img:"images/psstore/inr/1000.png", name:"Карта PS Store 1000 INR (Индия)", grad:"linear-gradient(160deg,#E8A02E,#B0640A)"},
         {region:"INR", amount:"2000", price:2379, old:2550,img:"images/psstore/inr/2000.png", name:"Карта PS Store 2000 INR (Индия)", grad:"linear-gradient(160deg,#E8A02E,#B0640A)"},
@@ -158,7 +186,7 @@ items:[
         {region:"INR", amount:"7000", price:8449, old:8925,img:"images/psstore/inr/7000.png", name:"Карта PS Store 7000 INR (Индия)", grad:"linear-gradient(160deg,#E8A02E,#B0640A)"},
         {region:"INR", amount:"8000", price:9549, old:10200,img:"images/psstore/inr/8000.png", name:"Карта PS Store 8000 INR (Индия)", grad:"linear-gradient(160deg,#E8A02E,#B0640A)"},
       ]},
-      {code:"US", name:"США", label:"Покупайте карты PS Store для региона США и закупайтесь играми на PS4 и PS5. Активация только на аккаунте региона США. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятной игры!", 
+      {code:"US", name:"США", label:"Покупайте карты PS Store для региона США и закупайтесь играми на PS4 и PS5. Активация только на аккаунте региона США. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятной игры!",
 items:[
         {region:"USD", amount:"1", price:92, old:92,img:"images/psstore/usa/1.png", name:"Карта PS Store 1 USD (США)", grad:"linear-gradient(160deg,#2E9FE8,#0A5FB0)"},
         {region:"USD", amount:"2 USD", price:179, old:184,img:"images/psstore/usa/2.png", name:"Карта PS Store 2 USD (США)", grad:"linear-gradient(160deg,#2E9FE8,#0A5FB0)"},
@@ -171,7 +199,7 @@ items:[
         {region:"USD", amount:"150", price:12490, old:13800,img:"images/psstore/usa/150.png", name:"Карта PS Store 150 USD (США)", grad:"linear-gradient(160deg,#2E9FE8,#0A5FB0)"},
         {region:"USD", amount:"200", price:16290, old:18400,img:"images/psstore/usa/200.png", name:"Карта PS Store 200 USD (США)", grad:"linear-gradient(160deg,#2E9FE8,#0A5FB0)"},
       ]},
-      {code:"PL", name:"Польша", label:"Покупайте карты PS Store для региона Польша и наслаждайтесь играми на PS4 и PS5. Активация только на аккаунте региона Польша. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем классно провести время!", 
+      {code:"PL", name:"Польша", label:"Покупайте карты PS Store для региона Польша и наслаждайтесь играми на PS4 и PS5. Активация только на аккаунте региона Польша. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем классно провести время!",
 items:[
         {region:"PLN", amount:"50", price:1219, old:1292,img:"images/psstore/pln/50.png", name:"Карта PS Store 50 PLN (Польша)", grad:"linear-gradient(160deg,#E82E7B,#8A0A4A)"},
         {region:"PLN", amount:"100", price:2449, old:2585,img:"images/psstore/pln/100.png", name:"Карта PS Store 100 PLN (Польша)", grad:"linear-gradient(160deg,#E82E7B,#8A0A4A)"},
@@ -184,7 +212,7 @@ items:[
   appleid: {
     title:"Подарочные карты Apple", logo:"", img:"images/apple/logo.jpg", label:"Подарочные карты Apple",
     countries:[
-      {code:"TR", name:"Турция", label:"Покупайте подарочные карты Apple ID Турция и закупайтесь по низким ценам в AppStore и iTunes. Активация только на аккаунте региона Турция. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем удачных покупок!", 
+      {code:"TR", name:"Турция", label:"Покупайте подарочные карты Apple ID Турция и закупайтесь по низким ценам в AppStore и iTunes. Активация только на аккаунте региона Турция. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем удачных покупок!",
 items:[
         {region:"TRY", amount:"10", price:27, old:23,img:"images/apple/try/10.png", name:"Apple Gift Card 10 TRY (Турция)", grad:"linear-gradient(160deg,#3A3A3A,#0E0E0E)"},
         {region:"TRY", amount:"25", price:68, old:57,img:"images/apple/try/25.png", name:"Apple Gift Card 25 TRY (Турция)", grad:"linear-gradient(160deg,#3A3A3A,#0E0E0E)"},
@@ -198,7 +226,7 @@ items:[
         {region:"TRY", amount:"1750", price:3590, old:3962,img:"images/apple/try/1750.png", name:"Apple Gift Card 1750 TRY (Турция)", grad:"linear-gradient(160deg,#3A3A3A,#0E0E0E)"},
         {region:"TRY", amount:"2000", price:4090, old:4528,img:"images/apple/try/2000.png", name:"Apple Gift Card 2000 TRY (Турция)", grad:"linear-gradient(160deg,#3A3A3A,#0E0E0E)"},
       ]},
-      {code:"US", name:"США", label:"Покупайте подарочные карты Apple ID США и закупайтесь эксклюзивами в AppStore и iTunes. Активация только на аккаунте региона США. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятных покупок!", 
+      {code:"US", name:"США", label:"Покупайте подарочные карты Apple ID США и закупайтесь эксклюзивами в AppStore и iTunes. Активация только на аккаунте региона США. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятных покупок!",
 items:[
         {region:"USD", amount:"2", price:179, old:174,img:"images/apple/usa/2.png", name:"Apple Gift Card 2 USD (США)", grad:"linear-gradient(160deg,#565656,#161616)"},
         {region:"USD", amount:"3", price:279, old:261,img:"images/apple/usa/3.png", name:"Apple Gift Card 3 USD (США)", grad:"linear-gradient(160deg,#565656,#161616)"},
@@ -265,6 +293,57 @@ items:[
         {region:"US", amount:"20 USD", price:1649, old:1840,img:"images/nintendo/20.png", name:"Nintendo eShop 20 USD (США)", grad:"linear-gradient(160deg,#E60012,#8B0000)"},
         {region:"US", amount:"50 USD", price:4099, old:4600,img: "images/nintendo/50.png", name:"Nintendo eShop 50 USD (США)", grad:"linear-gradient(160deg,#E60012,#8B0000)"},
         {region:"US", amount:"3 мес", price:5690, old:6440,img:"images/nintendo/3m.png", name:"Nintendo Switch Online - 3 Месяца (США)", grad:"linear-gradient(160deg,#E60012,#8B0000)"},
+      ]},
+    ]
+  },
+  xboxgiftcard: {
+    title:"Xbox Gift Card", logo:"🎮", img:"images/xbox/logo.png",
+    label:"Выберите номинал подарочной карты Xbox нужного региона. Код придёт после оплаты — активируйте его в аккаунте выбранного региона.",
+    countries:[
+      {code:"US", name:"США", label:"Покупайте подарочные карты Xbox для региона США и пополняйте баланс Microsoft Store для игр и подписок Game Pass. Активация только на аккаунте региона США. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятной игры!",
+items:[
+        {region:"USD", amount:"1", price:929, old:1030,name:"Xbox Gift Card 1 USD (США)", grad:"linear-gradient(160deg,#3EA836,#0E4A0E)",img: "images/xbox/usa/1.png",},
+        {region:"USD", amount:"5", price:1379, old:1545,name:"Xbox Gift Card 5 USD (США)", grad:"linear-gradient(160deg,#3EA836,#0E4A0E)",img: "images/xbox/usa/5.png",},
+        {region:"USD", amount:"10", price:2290, old:2575,name:"Xbox Gift Card 10 USD (США)", grad:"linear-gradient(160deg,#3EA836,#0E4A0E)",img: "images/xbox/usa/10.png",},
+        {region:"USD", amount:"25", price:4590, old:5150,name:"Xbox Gift Card 25 USD (США)", grad:"linear-gradient(160deg,#3EA836,#0E4A0E)",img: "images/xbox/usa/25.png",},
+        {region:"USD", amount:"50", price:9190, old:10300,name:"Xbox Gift Card 50 USD (США)", grad:"linear-gradient(160deg,#3EA836,#0E4A0E)",img: "images/xbox/usa/50.png",},
+      ]},
+      {code:"TR", name:"Турция", label:"Покупайте подарочные карты Xbox для региона Турция по выгодному курсу. Активация только на аккаунте региона Турция. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем удачных покупок!",
+items:[
+        {region:"TRY", amount:"25", price:249, old:283,name:"Xbox Gift Card 25 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#8A1E0A)",img: "images/xbox/try/25.png",},
+        {region:"TRY", amount:"50", price:589, old:665,name:"Xbox Gift Card 50 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#8A1E0A)",img: "images/xbox/try/50.png",},
+        {region:"TRY", amount:"100", price:1149, old:1298,name:"Xbox Gift Card 100 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#8A1E0A)",img: "images/xbox/try/100.png",},
+        {region:"TRY", amount:"300", price:2249, old:2544,name:"Xbox Gift Card 300 TRY (Турция)", grad:"linear-gradient(160deg,#E8502E,#8A1E0A)",img: "images/xbox/try/300.png",},
+      ]},
+      {code:"PL", name:"Польша", label:"Покупайте подарочные карты Xbox для региона Польша и пополняйте баланс Microsoft Store. Активация только на аккаунте региона Польша. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем классно провести время!",
+items:[
+        {region:"PLN", amount:"20", price:1229, old:1300,name:"Xbox Gift Card 20 PLN (Польша)", grad:"linear-gradient(160deg,#2E9FE8,#0A3C8A)",img: "images/xbox/pln/20.png",},
+        {region:"PLN", amount:"50", price:2449, old:2600,name:"Xbox Gift Card 50 PLN (Польша)", grad:"linear-gradient(160deg,#2E9FE8,#0A3C8A)",img: "images/xbox/pln/50.png",},
+        {region:"PLN", amount:"70", price:4879, old:5200,name:"Xbox Gift Card 70 PLN (Польша)", grad:"linear-gradient(160deg,#2E9FE8,#0A3C8A)",img: "images/xbox/pln/70.png",},
+        {region:"PLN", amount:"100", price:7290, old:7800,name:"Xbox Gift Card 100 PLN (Польша)", grad:"linear-gradient(160deg,#2E9FE8,#0A3C8A)",img: "images/xbox/pln/100.png",},
+  {region:"PLN", amount:"200", price:7290, old:7800,name:"Xbox Gift Card 200 PLN (Польша)", grad:"linear-gradient(160deg,#2E9FE8,#0A3C8A)",img: "images/xbox/pln/200.png",},
+      ]},
+    ]
+  },
+  googleplay: {
+    title:"Google Play", logo:"▶️", img:"images/gplay/logo.png",
+    label:"Выберите номинал подарочной карты Google Play нужного региона. Код придёт после оплаты — активируйте его в аккаунте выбранного региона.",
+    countries:[
+      {code:"US", name:"Америка (USD)", label:"Покупайте подарочные карты Google Play для региона США и пополняйте баланс для игр, приложений и подписок. Активация только на аккаунте региона США. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятных покупок!",
+items:[
+  {region:"USD", amount:"5", price:929, old:1030,name:"Google Play Gift Card 5 USD (США)", grad:"linear-gradient(160deg,#3EBEEB,#0A5FB0)",img: "images/gplay/usa/5.png",},
+        {region:"USD", amount:"10", price:929, old:1030,name:"Google Play Gift Card 10 USD (США)", grad:"linear-gradient(160deg,#3EBEEB,#0A5FB0)",img: "images/gplay/usa/10.png",},
+        {region:"USD", amount:"15", price:1379, old:1545,name:"Google Play Gift Card 15 USD (США)", grad:"linear-gradient(160deg,#3EBEEB,#0A5FB0)",img: "images/gplay/usa/15.png",},
+        {region:"USD", amount:"25", price:2290, old:2575,name:"Google Play Gift Card 25 USD (США)", grad:"linear-gradient(160deg,#3EBEEB,#0A5FB0)",img: "images/gplay/usa/25.png",},
+        {region:"USD", amount:"50", price:4590, old:5150,name:"Google Play Gift Card 50 USD (США)", grad:"linear-gradient(160deg,#3EBEEB,#0A5FB0)",img: "images/gplay/usa/50.png",},
+      ]},
+      {code:"TR", name:"Турция (TRY/TL)", label:"Покупайте подарочные карты Google Play для региона Турция по выгодному курсу. Активация только на аккаунте региона Турция. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем удачных покупок!",
+items:[
+   {region:"TRY", amount:"25", price:249, old:283,name:"Google Play Gift Card 25 TRY (Турция)", grad:"linear-gradient(160deg,#F4B400,#B07800)",img: "images/gplay/try/25.png",},
+   {region:"TRY", amount:"50", price:249, old:283,name:"Google Play Gift Card 50 TRY (Турция)", grad:"linear-gradient(160deg,#F4B400,#B07800)",img: "images/gplay/try/50.png",},
+        {region:"TRY", amount:"100", price:249, old:283,name:"Google Play Gift Card 100 TRY (Турция)", grad:"linear-gradient(160deg,#F4B400,#B07800)",img: "images/gplay/try/100.png",},
+        {region:"TRY", amount:"250", price:589, old:665,name:"Google Play Gift Card 250 TRY (Турция)", grad:"linear-gradient(160deg,#F4B400,#B07800)",img: "images/gplay/try/250.png",},
+        {region:"TRY", amount:"500", price:1149, old:1298,name:"Google Play Gift Card 500 TRY (Турция)", grad:"linear-gradient(160deg,#F4B400,#B07800)",img: "images/gplay/try/500.png",},
       ]},
     ]
   }
@@ -364,7 +443,7 @@ function renderPurchases(){
       : `<div class="po-status paid">✓ Оплачено</div>`;
     const noteHtml = o.status === "processing"
       ? `<div class="po-note">Проверяем поступление оплаты — обычно занимает пару минут.</div>`
-      : `<div class="po-note paid">Оплата подтверждена. По вопросам — <a href="https://t.me/metracodehelp" target="_blank" rel="noopener" class="po-support-link">обращаться в поддержку</a>.</div>`;
+      : `<div class="po-note paid">Оплата подтверждена. По вопросам — <a href="https://t.me/metrapayhelp" target="_blank" rel="noopener" class="po-support-link">обращаться в поддержку</a>.</div>`;
     const itemsHtml = o.items.map((it, itemIdx)=>{
       const codesId = `po-codes-${o.id}-${itemIdx}`;
       const hasMultiple = it.codes && it.codes.length > 1;
@@ -1249,8 +1328,8 @@ document.getElementById("cart-back").addEventListener("click", ()=> goBack());
 const donateServices = {
   pubg: {
     name:"PUBG Mobile", grad:"linear-gradient(135deg,#3A1414,#1E0A0A)", icon:"🪖", idLabel:"UID",
-    idHelp:{img:"images/pubg/pre.jpg", text:"Откройте PUBG Mobile, зайдите в профиль — ваш UID отображается под именем персонажа и состоит из 9–10 цифр."},
-    pkgLabel:{direct:"Быстрое пополнение UC по UID по самым низким ценам. Пополнение происходит автоматически в течении 5-10 минут. Желаем удачной игры, друг!", codes:"Быстрое пополнение WOW Coins для Пабг Мобайл по UID. Пополнение происходит автоматически в течении 5-10 минут. Желаем приятной игры, друг!"},
+    idHelp:{img:"images/pubg/help.png", text:"Откройте PUBG Mobile, зайдите в профиль и скопируйте Ваш UID, он нужен для доставки монет. Проверьте все данные, чтобы не было ошибок. Удачной покупки!"},
+    pkgLabel:{direct:"Быстрое пополнение UC по UID по самым низким ценам. Пополнение происходит автоматически в течении 5-10 минут. Желаем удачной игры!", codes:"Быстрое пополнение WOW Coins для Пабг Мобайл по UID. Пополнение происходит автоматически в течении 5-10 минут. Желаем приятной игры!"},
     img:"images/pubg/pre.jpg",
     // UC Coins — прямое зачисление по UID.
     packages:[
@@ -1284,13 +1363,14 @@ const donateServices = {
   mlbb: {
     name:"Mobile Legends: Bang Bang", grad:"linear-gradient(135deg,#4B4E9E,#2E3070)", icon:"🛡️",
     idLabel:"User ID", idPattern:/^\d+$/, idErrorText:"User ID — только цифры",
-    idHelp:{img:"images/mlbb/mbl.jpg", text:"Откройте Mobile Legends, нажмите на аватар в левом верхнем углу — там будут указаны User ID и Zone ID (через дефис)."},
+    idHelp:{img:"images/mlbb/help.png", text:"Откройте Mobile Legends, нажмите на аватар в левом верхнем углу — там будут указаны User ID и (Zone ID в скобках). Сюда введите Ваш User ID, подсказка на фото. Удачной покупки!"},
     zoneIdLabel:"Zone ID", zoneIdPattern:/^\d+$/, zoneIdErrorText:"Zone ID — только цифры",
-    zoneIdHelp:{img:"images/mlbb/mbl.jpg", text:"Zone ID — это цифры после дефиса рядом с User ID в профиле игры, например 1234-5678, где 5678 и есть Zone ID."},
-    pkgLabel:"Покупайте алмазы Мобайл Легендс, стильные скины уже ждут Вас. Пополнение по Player ID и Zone ID — никакие данные не нужны. Пополнение в течении 5 минут. Покупай и наслаждайся. Удачной игры, друг!",
+    zoneIdHelp:{img:"images/mlbb/help.png", text:"Zone ID — это цифры в скобках рядом с User ID в профиле игры. Сюда введите Ваш Zone ID, подсказка на фото. Удачной покупки!"},
+    pkgLabel:"Покупайте алмазы Мобайл Легендс, стильные скины уже ждут Вас. Пополнение по Player ID и Zone ID — никакие данные не нужны. Пополнение в течении 5 минут. Покупай и наслаждайся. Желаем удачной игры!",
     img:"images/mlbb/mbl.jpg",
     packages:[
-      {name:"Недельный пропуск", displayName:"<span class=\"topup-grid-main\">Недельный пропуск</span><span class=\"topup-grid-region\">РОССИЯ</span>", price:3190, old:3650, img:"images/mlbb/week.jpg"},
+      {name:"Недельный пропуск", displayName:"<span class=\"topup-grid-main\">Недельный пропуск</span><span class=\"topup-grid-region\">РОССИЯ</span>", price:3190, old:3650, img:"images/mlbb/week.jpg",
+   info:"В состав Недельного пропуска входит: сразу получаете 80 алмазов и карту позднего входа(позволяет забрать награду за 1 пропущенный день). Затем в течении 7 дней (включая день покупки): 20 алмазов при ежедневном входе в игру, 30 звездных очков и набор выбора алмазного пропуска.\nВнимание: для покупки нужно получить 5-й уровень или выше. Пропуск можно приобрести до 10 раз, что соответствует максимуму 70 дней подписки."},
       {name:"35 алмазов", displayName:"<span class=\"topup-grid-main\">32 + 3 алмаза<span class=\"emoji\">💎</span></span><span class=\"topup-grid-region\">РОССИЯ</span>", price:150, old:169, img:"images/mlbb/150.jpg"},
       {name:"55 алмазов", displayName:"<span class=\"topup-grid-main\">50 + 5 алмазов<span class=\"emoji\">💎</span></span><span class=\"topup-grid-region\">РОССИЯ</span>", price:295, old:335, img:"images/mlbb/150.jpg"},
       {name:"165 алмазов", displayName:"<span class=\"topup-grid-main\">150 + 15 алмазов<span class=\"emoji\">💎</span></span><span class=\"topup-grid-region\">РОССИЯ</span>", price:1090, old:1240, img:"images/mlbb/150.jpg"},
@@ -1304,12 +1384,14 @@ const donateServices = {
   honorkings: {
     name:"Honor of Kings", grad:"linear-gradient(135deg,#3A2A0E,#1E1608)", icon:"🔥",
     idLabel:"Player ID", idPattern:/^\d+$/, idErrorText:"UID — только цифры",
-    idHelp:{img:"images/freefire/prev.jpg", text:"Откройте Free Fire, зайдите в профиль — ваш UID отображается под ником и состоит из 8–9 цифр."},
-    pkgLabel:"Покупайте жетоны для Honor of Kings и наслаждайтесь любимой игрой блистая на поле боя. Пополнение проходит по ID, никакие данные не требуются. Пополнение в течении 5-10 минут. Удачной игры, друг!",
+    idHelp:{img:"images/honor/help.png", text:"Введите или скопируйте Ваш ID из игры Honor of Kings. Проверьте все данные, чтобы не было ошибок. Удачной покупки!"},
+    pkgLabel:"Покупайте жетоны для Honor of Kings и наслаждайтесь любимой игрой блистая на поле боя. Пополнение проходит по ID, никакие данные не требуются. Пополнение в течении 5-10 минут. Желаем удачной игры!",
     img:"images/honor/logo.png",
     packages:[
-      {name:"Недельная карта", displayName:"<span class=\"topup-grid-main\">Недельная карта</span>", price:4590, old:5490, img:"images/honor/week.png"},
-      {name:"Недельная карта плюс", displayName:"<span class=\"topup-grid-main\">Недельная карта плюс</span>", price:4590, old:5490, img:"images/honor/plus.png"},
+      {name:"Недельная карта", displayName:"<span class=\"topup-grid-main\">Недельная карта</span>", price:4590, old:5490, img:"images/honor/week.png",
+    info:"Можно купить 1 раз в 7 дней. После покупки сразу получаете: 80 жетонов и талон на 100 жетонов.\n Затем, в течении 7 дней 15 жетонов ежедневно и гарантированный сундук."},
+      {name:"Недельная карта плюс", displayName:"<span class=\"topup-grid-main\">Недельная карта плюс</span>", price:4590, old:5490, img:"images/honor/plus.png",
+    info:"Можно купить 1 раз в 7 дней. После покупки сразу получаете: 240 жетонов и 200 золотых ваучеров.\n После этого, в течении 7 дней 20 жетонов ежедневно и дополнительные подарки."},
       {name:"16 жетонов", displayName:"<span class=\"topup-grid-main\">16 жетонов", price:99, old:112, img:"images/honor/16.png"},
       {name:"80 жетонов", displayName:"<span class=\"topup-grid-main\">80 жетонов", price:299, old:339, img:"images/honor/80.png"},
       {name:"240 жетонов", displayName:"<span class=\"topup-grid-main\">240 жетонов", price:489, old:559, img:"images/honor/400.png"},
@@ -1325,10 +1407,10 @@ const donateServices = {
   identityv: {
     name:"Identity V", grad:"linear-gradient(135deg,#2A1B3D,#0A0610)", icon:"🎭",img:"images/identity/logo.jpg",
     idLabel:"Ваш ID", idPattern:/^\d+$/, idErrorText:"ID — только цифры",
-    idHelp:{img:"https://i.pinimg.com/474x/7d/56/3d/7d563d48cb47c3ff7ffeadb545697a4f.jpg", text:"Откройте Identity V и нажмите на иконку профиля слева от шестерёнки — под вашим именем отобразится ID, состоящий из 7–8 цифр."},
+    idHelp:{img:"images/identity/help.png", text:"Введите или скопируйте ID из Вашего профиля игры Identity V в поле ID. Проверьте все данные, чтобы не было ошибок. Удачной покупки!"},
     serverLabel:"Выберите Ваш сервер", serverOptions:["NA and EU","Asia"],
     pkgLabel:{
-      echoes:"БУ! Здесь для Вас Печати по самым низким ценам. Пополнение по ID в течении 5-10 минут. Желаем классно провести время за любимой игрой, друг!",
+      echoes:"БУ! Здесь для Вас Печати по самым низким ценам. Пополнение по ID в течении 5-10 минут. Желаем классно провести время за любимой игрой!",
       packs:"Покупайте наборы и играйте с удовольствием в любимую игру. Пополнение по ID в течении 5-10 минут. Желаем приятной игры, друг!"
     },
     /* variants — вкладки-переключатели прямо на странице пополнения (пакеты
@@ -1344,22 +1426,83 @@ const donateServices = {
           {name:"690 + 69 печатей", displayName:"<span class=\"topup-grid-main\">690 + 69 печатей", price:2650, old:2890,img:"images/identity/690.png", grad:"linear-gradient(160deg,#4A3470,#150E24)"},
           {name:"2025 + 202 печатей", displayName:"<span class=\"topup-grid-main\">2025 + 202 печатей", price:4455, old:4690,img:"images/identity/2025.png", grad:"linear-gradient(160deg,#4A3470,#150E24)"},
           {name:"3330 + 333 печатей", displayName:"<span class=\"topup-grid-main\">3330 + 333 печатей", price:9015, old:9490,img:"images/identity/3330.png", grad:"linear-gradient(160deg,#4A3470,#150E24)"},
-	  {name:"6590 + 659 печатей", displayName:"<span class=\"topup-grid-main\">6590 + 659 печатей", price:89, old:99,img:"images/identity/6590.png", grad:"linear-gradient(160deg,#4A3470,#150E24)"},
+    {name:"6590 + 659 печатей", displayName:"<span class=\"topup-grid-main\">6590 + 659 печатей", price:89, old:99,img:"images/identity/6590.png", grad:"linear-gradient(160deg,#4A3470,#150E24)"},
 ]
       },
       {
         key:"packs", label:"Пакеты",
+        /* info — необязательное поле, текст состава пакета. Если заполнено,
+           на карточке появляется круглая кнопка (i) в углу — по клику
+           открывается окно по центру экрана с этим текстом и кнопкой
+           «Закрыть». Чтобы добавить такую кнопку другим товарам — впишите
+           поле info:"..." в нужный пакет в donateServices. */
         packages:[
-          {name:"Пакет сфера памяти", displayName:"<span class=\"topup-grid-main\">Пакет сфера памяти</span>", price:299, old:339,img:"images/identity/mem.png", grad:"linear-gradient(160deg,#5A2E4A,#1E0A16)"},
-          {name:"Пакет вдохновения", displayName:"<span class=\"topup-grid-main\">Пакет вдохновения</span>", price:549, old:620,img:"images/identity/insp.png", grad:"linear-gradient(160deg,#5A2E4A,#1E0A16)"},
-          {name:"Пакет пазлов", displayName:"<span class=\"topup-grid-main\">Пакет пазлов</span>", price:990, old:1120,img:"images/identity/clu.png", grad:"linear-gradient(160deg,#5A2E4A,#1E0A16)"},
+          {name:"Пакет сфера памяти", displayName:"<span class=\"topup-grid-main\">Пакет сфера памяти</span>", price:299, old:339,img:"images/identity/mem.png", grad:"linear-gradient(160deg,#5A2E4A,#1E0A16)",
+            info:"Доступен 1 раз в месяц. В состав набора сфера памяти входит:\n— 10 Сфер памяти\n— 50 Писем дружбы\n— 20 Остатков костюма\n— 20 Шпионские очки\n— 188 Пазлов (подсказок)"},
+          {name:"Пакет вдохновения", displayName:"<span class=\"topup-grid-main\">Пакет вдохновения</span>", price:549, old:620,img:"images/identity/insp.png", grad:"linear-gradient(160deg,#5A2E4A,#1E0A16)",
+            info:"Доступен 1 раз в месяц. В состав набора вдохновения входит:\n— 60 Вдохновения\n— 10 Шпионские очки\n— 10 Остатков костюма\n— 88 Пазлов(подсказок)"},
+          {name:"Пакет пазлов", displayName:"<span class=\"topup-grid-main\">Пакет пазлов</span>", price:990, old:1120,img:"images/identity/clu.png", grad:"linear-gradient(160deg,#5A2E4A,#1E0A16)",
+            info:"Доступен 1 раз в месяц. В состав набора пазлов входит:\n— 2488 Пазлов(подсказок)\n— 20 Остатков костюма\n— 20 Шпионские очки"},
         ]
       }
     ]
   },
+bloodstrike: {
+    name:"Blood Strike", grad:"linear-gradient(135deg,#3A0E0E,#120303)", icon:"🔫", img: "images/bstrike/logo.png",
+    idLabel:"Player ID", idPattern:/^\d+$/, idErrorText:"Player ID — только цифры",
+    idHelp:{text:"Откройте Blood Strike, нажмите на иконку профиля в левом верхнем углу и скопируйте Ваш ID (подсказки на фото). Проверьте все данные, чтобы не было ошибок. Удачной покупки!", img: "images/bstrike/help.png",},
+    pkgLabel:{
+      gold:"Покупайте золото для Blood Strike по самым низким ценам и забирай топ 1 с легкостью. Пополнение по ID в течение 5-10 минут. Желаем удачной игры!",
+      passes:"Покупайте боевые пропуски Blood Strike и удиви всех противников на поле боя. Пополнение по ID в течение 5-10 минут. Желаем приятной игры!"
+    },
+    /* variants — подкатегории Золото / Пропуски, аналогично Identity V выше. */
+    variants:[
+      {
+        key:"gold", label:"Золото",
+        packages:[
+          {name:"50 + 1 золота", displayName:"<span class=\"topup-grid-main\">50 + 1 золота", price:99, old:119, grad:"linear-gradient(160deg,#B08A2E,#3A2A0A)", img: "images/bstrike/gold/50.png",},
+          {name:"100 + 5 золота", displayName:"<span class=\"topup-grid-main\">100 + 5 золота", price:289, old:339, grad:"linear-gradient(160deg,#B08A2E,#3A2A0A)", img: "images/bstrike/gold/300.png",},
+          {name:"300 + 20 золота", displayName:"<span class=\"topup-grid-main\">300 + 20 золота", price:459, old:529, grad:"linear-gradient(160deg,#B08A2E,#3A2A0A)", img: "images/bstrike/gold/300.png",},
+          {name:"500 + 40 золота", displayName:"<span class=\"topup-grid-main\">500 + 40 золота", price:899, old:1030, grad:"linear-gradient(160deg,#B08A2E,#3A2A0A)", img: "images/bstrike/gold/500.png",},
+          {name:"1000 + 100 золота", displayName:"<span class=\"topup-grid-main\">1000 + 100 золота", price:1790, old:2050, grad:"linear-gradient(160deg,#B08A2E,#3A2A0A)", img: "images/bstrike/gold/1000.png",},
+          {name:"2000 + 260 золота", displayName:"<span class=\"topup-grid-main\">2000 + 260 золота", price:4290, old:4890, grad:"linear-gradient(160deg,#B08A2E,#3A2A0A)", img: "images/bstrike/gold/2000.png",},
+          {name:"5000 + 800 золота", displayName:"<span class=\"topup-grid-main\">5000 + 800 золота", price:4290, old:4890, grad:"linear-gradient(160deg,#B08A2E,#3A2A0A)", img: "images/bstrike/gold/5000.png",},
+        ]
+      },
+      {
+        key:"passes", label:"Пропуски",
+        packages:[
+     {name:"Strike Pass Elite", displayName:"<span class=\"topup-grid-main\">Strike pass elite</span>", price:1890, old:2190, grad:"linear-gradient(160deg,#8E2E3E,#240F14)", img:"images/bstrike/elite.png",
+    info:"В состав Strike Pass Elite входит:\n— 1 Счастливый сундук Strike Pass\n— 1 Боец\n— 1 Оружие\nОблик на оружие: 2 Ультры, 1200 Монет славы, 200 Карт опыта оружия, 25 Очков улучшения\nОблик на бойца: 1 Ультра, 2 Эпических. Внимание: купить можно только 1 раз за сезон!"},
+          {name:"Strike Pass Premium", displayName:"<span class=\"topup-grid-main\">Strike pass premium</span>", price:1890, old:2190, grad:"linear-gradient(160deg,#8E2E3E,#240F14)", img:"images/bstrike/prem.png",
+    info:"В состав Strike Pass Premium входит:\n— Все награды Strike Pass Elite\n— Увеличение боевого пропуска на 20 уровней\n— 1 Ультра облик\n— 150 Карт опыта оружия\n— 2000 Монет славы\n— 50 Очков улучшения\n Внимание: купить можно только 1 раз за сезон!"},
+          {name:"Пропуск повышения", displayName:"<span class=\"topup-grid-main\">Пропуск повышения</span>", price:590, old:690, grad:"linear-gradient(160deg,#8E2E3E,#240F14)", img:"images/bstrike/up.png",
+    info:"Внимание: пропуск повышения можно купить только 1 раз."},
+          {name:"Ультра скин «Счастливый сундук»", displayName:"<span class=\"topup-grid-main\">Ультра скин «Счастливый сундук»</span>", price:990, old:1150, grad:"linear-gradient(160deg,#8E2E3E,#240F14)", img:"images/bstrike/ultra.png",
+    info:"Купить набор можно на 1 аккаунт только 2 раза в неделю."},
+        ]
+      }
+    ]
+  },
+ marvelrivals: {
+    name:"Marvel Rivals", grad:"linear-gradient(135deg,#5A1414,#160505)",img:"images/marvel/logo.png", icon:"🦸",
+    idLabel:"UID", idPattern:/^\d+$/, idErrorText:"UID — только цифры",
+    idHelp:{img:"images/marvel/help.png", text:"Откройте Marvel Rivals, зайдите в профиль — скопируйте Ваш UID (подсказка на фото). Проверьте все данные, чтобы не было ошибок. Удачной покупки!"},
+    pkgLabel:"Покупайте латтисы и собирайте коллекции лимитированных образов. Пополнение по ID в течении 5-10 минут. Желаем приятной игры!",
+    packages:[
+      {name:"Pick-Up Bundle", displayName:"<span class=\"topup-grid-main\">Pick-Up Bundle", price:449, old:499,img:"images/marvel/pick.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)",
+    info:"Cразу получате скин на Венома гипероранжевый. Все награды: жетон костюма, 200 хроножетонов, граффити: гипероранжевый, именная табличка: гипероранжевый. Отыгрывайте 3 матча в день и получайте награду."},
+      {name:"100 lattices", displayName:"<span class=\"topup-grid-main\">100 lattices", price:449, old:499,img:"images/marvel/100.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
+      {name:"500 lattices", displayName:"<span class=\"topup-grid-main\">500 lattices", price:849, old:949,img:"images/marvel/500.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
+      {name:"1000 lattices", displayName:"<span class=\"topup-grid-main\">1000 lattices", price:1650, old:1890,img:"images/marvel/1000.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
+      {name:"2180 lattices", displayName:"<span class=\"topup-grid-main\">2180 lattices", price:2690, old:3150,img:"images/marvel/2180.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
+      {name:"5680 lattices", displayName:"<span class=\"topup-grid-main\">5680 lattices", price:3990, old:4720,img:"images/marvel/5680.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
+      {name:"11680 lattices", displayName:"<span class=\"topup-grid-main\">11680 lattices", price:3990, old:4720,img:"images/marvel/11680.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
+      ]
+  },
   pubgpc: {
     name:"PUBG PC", grad:"linear-gradient(135deg,#274038,#0E1A16)", img:"images/pubgpc/logo.jpg",
-    pkgLabel:"Покупайте G-Coins для PUBG на ПК и выделяйтесь на поле битвы. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятной игры и крупных побед, друг!",
+    pkgLabel:"Покупайте G-Coins для PUBG на ПК и выделяйтесь на поле битвы. Код придет в раздел «Мои покупки» в течении 5-10 минут. Желаем приятной игры и крупных побед!",
     // needsCode: true — вместо прямого зачисления по ID выдаётся код
     // (ключ активации), который покупатель сам вводит в Steam/клиенте.
     needsCode:true,
@@ -1377,8 +1520,8 @@ const donateServices = {
     iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.2 7.2h7.6c2.1 0 3.5 1.8 3.8 4.3.3 2.6-.6 5-2.3 5-1 0-1.5-.6-2.1-1.5-.6-.9-1.1-1.3-2.1-1.3h-1.4c-1 0-1.5.4-2.1 1.3-.6.9-1.1 1.5-2.1 1.5-1.7 0-2.6-2.4-2.3-5 .3-2.5 1.7-4.3 3.8-4.3Z"/><path d="M7.6 10.2v2M6.6 11.2h2"/><circle cx="15.1" cy="10" r=".55" fill="#fff" stroke="none"/><circle cx="16.6" cy="11.5" r=".55" fill="#fff" stroke="none"/></svg>',
     idLabel:"Ссылка на профиль Steam или SteamID64",
     idHelp:{
-      img:null,
-      text:"Откройте Steam → ваш профиль → скопируйте ссылку из адресной строки. Логин и пароль от аккаунта передавать не нужно."
+      img: "images/steam/help.png",
+      text:"Введите логин от Вашего аккаунта Steam. Найти его можно в строке «Об аккаунте» (подсказки на фото). Проверьте данные, чтобы не было ошибок. Удачной покупки!"
     },
     pkgLabel:{
       ru:"Пополнение кошелька Steam для аккаунтов региона Россия по логину. Зачисление происходит в течение 5 минут после оплаты.",
@@ -1398,21 +1541,19 @@ const donateServices = {
       {key:"kz", label:"Тенге (KZT)", currency:"₸", min:262, max:75000, rate:0.188}
     ]
   },
-  marvelrivals: {
-    name:"Marvel Rivals", grad:"linear-gradient(135deg,#5A1414,#160505)",img:"images/marvel/logo.png", icon:"🦸",
-    idLabel:"UID", idPattern:/^\d+$/, idErrorText:"UID — только цифры",
-    idHelp:{img:"images/marvel/logo.png", text:"Откройте Marvel Rivals, зайдите в профиль — ваш UID отображается под именем персонажа."},
-    pkgLabel:"Покупайте латтисы и собирайте коллекции лимитированных образов. Пополнение по ID в течении 5-10 минут. Желаем приятной игры, друг!",
+minecraft: {
+    name:"Minecraft", grad:"linear-gradient(135deg,#2E4A1E,#0E1A08)", icon:"🟩", img: "images/minecraft/logo.jpg",
+    // Minecoins — не зачисляются напрямую по ID, а выдаются кодом,
+    // который покупатель сам активирует в своём аккаунте Microsoft/Xbox.
+    needsCode:true,
+    pkgLabel:"Покупайте Minecoins для Minecraft и открывайте новые миры, скины и текстуры в Marketplace. Код придёт в раздел «Мои покупки» в течение 5-10 минут после оплаты. Желаем приятно провести время за любимой игрой!",
     packages:[
-      {name:"Pick-Up Bundle", displayName:"<span class=\"topup-grid-main\">Pick-Up Bundle", price:449, old:499,img:"images/marvel/pick.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
-      {name:"100 lattices", displayName:"<span class=\"topup-grid-main\">100 lattices", price:449, old:499,img:"images/marvel/100.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
-      {name:"500 lattices", displayName:"<span class=\"topup-grid-main\">500 lattices", price:849, old:949,img:"images/marvel/500.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
-      {name:"1000 lattices", displayName:"<span class=\"topup-grid-main\">1000 lattices", price:1650, old:1890,img:"images/marvel/1000.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
-      {name:"2180 lattices", displayName:"<span class=\"topup-grid-main\">2180 lattices", price:2690, old:3150,img:"images/marvel/2180.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
-      {name:"5680 lattices", displayName:"<span class=\"topup-grid-main\">5680 lattices", price:3990, old:4720,img:"images/marvel/5680.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
-      {name:"11680 lattices", displayName:"<span class=\"topup-grid-main\">11680 lattices", price:3990, old:4720,img:"images/marvel/11680.png", grad:"linear-gradient(160deg,#8E2E3E,#240F14)"},
-      ]
+      {name:"Minecraft PC: Java Bedrock edition", price:249, old:289, img: "images/minecraft/jbed.png"},
+      {name:"1720 Minecoins", price:1090, old:1250, img: "images/minecraft/1720.png"},
+      {name:"3500 Minecoins", price:2190, old:2490, img: "images/minecraft/3500.png"},
+    ]
   },
+
 
   /* ---------- Цифровые подписки ----------
      Отдельная категория сервисов внутри donateServices — те же поля
@@ -1423,38 +1564,79 @@ const donateServices = {
      Чтобы добавить ещё одну подписку — скопируйте один из блоков ниже и
      впишите свой key в список digitalSubscriptionKeys чуть ниже объекта. */
   netflix: {
-    name:"Netflix", grad:"linear-gradient(135deg,#7A0C0C,#1A0000)", icon:"🎬",
-    pkgLabel:"Выберите тариф подписки Netflix. Данные для входа придут в раздел «Мои покупки» в течение 5-10 минут после оплаты.",
-    packages:[
-      {name:"Standard — 1 месяц", price:499, old:699},
-      {name:"Standard — 3 месяца", price:1390, old:1890},
-      {name:"Premium — 1 месяц", price:699, old:999},
-      {name:"Premium — 3 месяца", price:1890, old:2690},
+    name:"Netflix", grad:"linear-gradient(135deg,#7A0C0C,#1A0000)", icon:"🎬", img: "images/netflix/logo.png",
+    pkgLabel:"Покупайте карту пополнения Netflix нужного региона и номинала. Код придёт в раздел «Мои покупки» в течение 5-10 минут после оплаты. Желаем приятного просмотра любимых новинок!",
+    /* variants — подкатегории по странам (карты пополнения Netflix), как у
+       Identity V выше. key уходит в topupMode, label — подпись таба. */
+    variants:[
+      {
+        key:"us", label:"США",
+        packages:[
+          {name:"Netflix Gift Card 15 USD (США)", price:1390, old:1550, img: "images/netflix/usa/15.png",},
+          {name:"Netflix Gift Card 20 USD (США)", price:2290, old:2550, img: "images/netflix/usa/20.png",},
+          {name:"Netflix Gift Card 30 USD (США)", price:4590, old:5100, img: "images/netflix/usa/30.png",},
+          {name:"Netflix Gift Card 50 USD (США)", price:9190, old:10200, img: "images/netflix/usa/50.png",},
+    {name:"Netflix Gift Card 60 USD (США)", price:9190, old:10200, img: "images/netflix/usa/60.png",},
+    {name:"Netflix Gift Card 100 USD (США)", price:9190, old:10200, img: "images/netflix/usa/100.png",},
+        ]
+      },
+      {
+        key:"pl", label:"Польша",
+        packages:[
+          {name:"Netflix Gift Card 60 PLN (Польша)", price:1229, old:1300, img: "images/netflix/pln/60.png",},
+          {name:"Netflix Gift Card 80 PLN (Польша)", price:2449, old:2600, img: "images/netflix/pln/80.png",},
+          {name:"Netflix Gift Card 120 PLN (Польша)", price:4879, old:5200, img: "images/netflix/pln/120.png",},
+        ]
+      },
+      {
+        key:"br", label:"Бразилия",
+        packages:[
+          {name:"Netflix Gift Card 50 BRL (Бразилия)", price:429, old:480, img: "images/netflix/brl/50.png",},
+          {name:"Netflix Gift Card 70 BRL (Бразилия)", price:849, old:950, img: "images/netflix/brl/70.png",},
+          {name:"Netflix Gift Card 150 BRL (Бразилия)", price:1690, old:1890, img: "images/netflix/brl/150.png",},
+        ]
+      }
     ]
   },
-  capcut: {
-    name:"CapCut", grad:"linear-gradient(135deg,#1B1140,#050508)", icon:"✂️",
-    pkgLabel:"Выберите срок подписки CapCut Pro. Активация происходит на указанном аккаунте в течение 5-10 минут после оплаты.",
+  likee: {
+    name:"Likee (алмазы)", grad:"linear-gradient(135deg,#1B1140,#050508)", icon:"💎", img: "images/likee/logo.jpg",
+    idLabel:"Likee ID", idPattern:/^\d+$/, idErrorText:"Likee ID — только цифры",
+    idHelp:{text:"Откройте приложение Likee, зайдите в профиль и скопируйте ваш ID. Проверьте все данные, чтобы не было ошибок. Удачной покупки!", img: "images/likee/help.png",},
+    // needsCode: false — алмазы зачисляются напрямую на указанный Likee ID,
+    // без выдачи кода в «Мои покупки».
+    needsCode:false,
+    pkgLabel:"Пополняйте баланс Likee по самым низким ценам и дари подарки любимым авторам. Пополнение происходит на указанный аккаунт в течение 5-10 минут после оплаты. Желаем хорошего дня и приятного времяпровождения!",
     packages:[
-      {name:"CapCut Pro — 1 месяц", price:349, old:499},
-      {name:"CapCut Pro — 3 месяца", price:890, old:1290},
-      {name:"CapCut Pro — 12 месяцев", price:2490, old:3990},
+      {name:"100 алмазов", price:99, old:129, img: "images/likee/100.png",},
+      {name:"200 алмазов", price:299, old:349, img: "images/likee/200.png",},
+      {name:"500 алмазов", price:899, old:999, img: "images/likee/2000.png",},
+      {name:"1000 алмазов", price:1790, old:1990, img: "images/likee/2000.png",},
+      {name:"1500 алмазов", price:4290, old:4790, img: "images/likee/2000.png",},
+      {name:"2000 алмазов", price:4290, old:4790, img: "images/likee/2000.png",},
+      {name:"2500 алмазов", price:4290, old:4790, img: "images/likee/5000.png",},
+      {name:"3000 алмазов", price:4290, old:4790, img: "images/likee/5000.png",},
+      {name:"3500 алмазов", price:4290, old:4790, img: "images/likee/5000.png",},
+      {name:"4000 алмазов", price:4290, old:4790, img: "images/likee/5000.png",},
+      {name:"4500 алмазов", price:4290, old:4790, img: "images/likee/5000.png",},
+      {name:"5000 алмазов", price:4290, old:4790, img: "images/likee/5000.png",},
     ]
   },
-  photoshop: {
-    name:"Adobe Photoshop", grad:"linear-gradient(135deg,#001E36,#31A8FF)", icon:"🎨",
-    pkgLabel:"Выберите срок подписки Adobe Photoshop. Активация происходит на указанном аккаунте в течение 5-10 минут после оплаты.",
+  discord: {
+    name:"Discord Nitro", grad:"linear-gradient(135deg,#001E36,#31A8FF)", icon:"🎨", img: "images/discord/logo.jpg",
+    pkgLabel:"Покупайте Nitro и насладитесь по максимуму всеми возможностями дискорда. Код придёт в раздел «Мои покупки» в течение 5-10 минут после оплаты. Желаем кайфово провести время за разговорами в любимом дискорде!",
+    // Отдельный заметный блок под описанием на странице пополнения.
+    regionWarning:"⚠️ Не подходит для Российских аккаунтов",
     packages:[
-      {name:"Photoshop — 1 месяц", price:899, old:1299},
-      {name:"Photoshop — 3 месяца", price:2390, old:3390},
-      {name:"Photoshop — 12 месяцев", price:6990, old:9990},
+      {name:"Nitro Basic на месяц", price:899, old:1299, img: "images/discord/basic.png",},
+      {name:"Nitro на месяц", price:2390, old:3390, img: "images/discord/1m.png",},
+      {name:"Nitro на год", price:6990, old:9990, img: "images/discord/1y.png",},
     ]
   }
 };
 
 /* Ключи сервисов из donateServices выше, которые показываются в разделе
    "Цифровые подписки" на главной (а не в "Игровой донат"). */
-const digitalSubscriptionKeys = ["netflix", "capcut", "photoshop"];
+const digitalSubscriptionKeys = ["netflix", "likee", "discord"];
 
 function maxDiscountBadge(packages){
   let max = 0;
@@ -1517,8 +1699,9 @@ document.querySelectorAll("#donate-scroll .donate-tile").forEach(card=>{
 function subscriptionCardHTML(key){
   const s = donateServices[key];
   const favId = `donate:${key}`;
-  const minPrice = Math.min(...s.packages.map(p=>p.price));
-  const badge = s.badge || maxDiscountBadge(s.packages);
+  const allPkgs = s.variants ? s.variants.flatMap(v=>v.packages) : s.packages;
+  const minPrice = Math.min(...allPkgs.map(p=>p.price));
+  const badge = s.badge || maxDiscountBadge(allPkgs);
 
   favoriteCandidates[favId] = {
     name: s.name, price: `от ${minPrice.toLocaleString("ru-RU")} ₽`, old:null,
@@ -1591,6 +1774,16 @@ function openTopup(key){
 
   updateTopupPkgLabel();
   renderTopupModeTabs();
+
+  // Предупреждение о регионе (см. donateServices.discord) — отдельный
+  // заметный блок сразу под описанием сервиса, если у сервиса задано поле.
+  const warningEl = document.getElementById("topup-region-warning");
+  if(s.regionWarning){
+    warningEl.textContent = s.regionWarning;
+    warningEl.style.display = "block";
+  } else {
+    warningEl.style.display = "none";
+  }
 
   renderTopupPackages();
   showSubView("view-topup");
@@ -1676,9 +1869,10 @@ function renderTopupPackages(){
       grad: p.grad || s.grad, img: pkgImg || null, sub: null
     };
     return `
-    <div class="giftcard" data-idx="${i}">
+    <div class="giftcard" data-catalog-name="${(isCodes ? p.name : `${s.name} — ${p.name}`).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" data-idx="${i}">
       <div class="giftcard-cover" style="background:${pkgImg ? `url('${pkgImg}') center/cover no-repeat` : (p.grad || s.grad)};">
         ${heartHTML(favId)}
+        ${p.info ? infoHTML(i) : ""}
         <div class="giftcard-inner">
           ${pkgImg ? "" : `<div class="giftcard-logo">${isCodes ? cat.logo : s.icon}</div>`}
         </div>
@@ -1689,9 +1883,13 @@ function renderTopupPackages(){
   }).join("");
 
   gridEl.querySelectorAll(".giftcard").forEach(el=>{
-    el.addEventListener("click", ()=> goToTopupPayment(parseInt(el.dataset.idx, 10)));
+    el.addEventListener("click", (e)=>{
+      if(e.target.closest(".card-heart") || e.target.closest(".card-info")) return;
+      goToTopupPayment(parseInt(el.dataset.idx, 10));
+    });
   });
   bindHearts(gridEl);
+  bindInfoButtons(gridEl, pkgs);
 }
 
 /* Строит и открывает страницу оплаты для пакета с индексом idx текущего
@@ -1891,6 +2089,20 @@ function closeIdHelp(){
 document.getElementById("id-help-close").addEventListener("click", closeIdHelp);
 document.getElementById("id-help-overlay").addEventListener("click", (e)=>{
   if(e.target.id === "id-help-overlay") closeIdHelp();
+});
+
+/* ---------- Package info modal (состав пакета) — по центру экрана ---------- */
+function openPkgInfo(title, text){
+  document.getElementById("pkg-info-title").textContent = title || "";
+  document.getElementById("pkg-info-text").textContent = text || "";
+  document.getElementById("pkg-info-overlay").classList.add("show");
+}
+function closePkgInfo(){
+  document.getElementById("pkg-info-overlay").classList.remove("show");
+}
+document.getElementById("pkg-info-close").addEventListener("click", closePkgInfo);
+document.getElementById("pkg-info-overlay").addEventListener("click", (e)=>{
+  if(e.target.id === "pkg-info-overlay") closePkgInfo();
 });
 
 function openPaymentPage(config){

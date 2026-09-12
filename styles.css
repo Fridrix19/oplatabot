@@ -302,6 +302,18 @@
   .topup-info-name{flex:1; min-width:0; font-size:18px; font-weight:800; color:var(--text); line-height:1.2;}
 
   .topup-info-body{padding:12px 2px 2px; font-size:13.5px; color:var(--text-dim); line-height:1.5;}
+
+  /* ---------- Предупреждение о регионе (например, "не для РФ-аккаунтов") ----------
+     Отдельный акцентный блок ПОД карточкой описания сервиса на странице
+     пополнения (не внутри неё). Показывается только когда у сервиса задано
+     donateServices.*.regionWarning. */
+  .topup-region-warning{
+    margin:-4px 16px 18px; padding:12px 14px; border-radius:16px;
+    background:rgba(255,69,58,.1);
+    border:1px solid rgba(255,69,58,.38);
+    color:#FF453A; font-size:13.5px; font-weight:800; line-height:1.4;
+    text-align:center;
+  }
   .topup-faq-item{padding:10px 0; border-top:1px solid var(--stroke);}
   .topup-faq-item:first-child{border-top:none; padding-top:2px;}
   .topup-faq-q{font-size:13.5px; font-weight:700; color:var(--text);}
@@ -363,6 +375,8 @@
   .po-item-name{flex:1; min-width:0; font-size:13px; font-weight:600; color:var(--text);}
   .po-item-qty{font-size:11px; color:var(--text-dim); font-weight:600; margin-left:4px;}
   .po-item-price{font-size:13px; font-weight:700; white-space:nowrap;}
+  .po-item-userid{margin:6px 0 0 46px; font-size:12px; color:var(--text-dim);}
+  .po-item-userid span{color:var(--text); font-weight:700;}
   .po-codes{margin:10px 0 2px 46px; display:flex; flex-direction:column; gap:7px;}
   .po-codes-toggle{
     display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
@@ -615,6 +629,38 @@
     width:100%; background:var(--accent-grad); color:#fff; border:none; border-radius:16px;
     padding:15px; font-size:16px; font-weight:800; cursor:pointer;
   }
+
+  /* ---------- Package info modal (состав пакета, по центру экрана) ---------- */
+  .pkg-info-overlay{
+    display:none; position:fixed; inset:0; z-index:1300; background:rgba(4,6,12,.72);
+    align-items:center; justify-content:center; padding:24px; box-sizing:border-box;
+    backdrop-filter:blur(2px);
+  }
+  .pkg-info-overlay.show{display:flex;}
+  .pkg-info-modal{
+    width:100%; max-width:340px; background:var(--card); border:1px solid var(--stroke);
+    border-radius:20px; padding:22px 20px 18px; box-sizing:border-box;
+    text-align:center;
+  }
+  .pkg-info-title{font-size:16px; font-weight:800; color:var(--text); margin-bottom:10px;}
+  .pkg-info-text{font-size:14px; color:var(--text-mid); line-height:1.55; margin-bottom:18px; white-space:pre-line;}
+  .pkg-info-close{
+    width:100%; background:var(--accent-grad); color:#fff; border:none; border-radius:14px;
+    padding:13px; font-size:15px; font-weight:800; cursor:pointer;
+  }
+  .pkg-info-close:active{opacity:.85;}
+
+  /* ---------- Package "what's inside" button on product card ---------- */
+  .card-info{
+    position:absolute; top:8px; left:8px; z-index:3;
+    width:31px; height:31px; border-radius:50%;
+    background:var(--accent-grad);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:transform .12s;
+  }
+  .card-info svg{width:16px; height:16px; color:#fff; stroke-width:2.2;}
+  .card-info:active{transform:scale(0.88);}
+
   .payment-qty-stepper{display:inline-flex; align-items:center; gap:2px; background:var(--card-2); border:1px solid var(--stroke); border-radius:14px; padding:4px; margin:0 16px 6px;}
   .payment-qty-stepper button{width:34px; height:34px; border-radius:10px; border:none; background:var(--card); color:var(--text); font-size:18px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   .payment-qty-stepper button:active{background:var(--stroke);}
@@ -722,7 +768,7 @@
     box-shadow:0 6px 18px rgba(0,0,0,.35);
     transition:transform .1s ease;
   }
-  .giftcard:active:not(:has(.card-heart:active)) .giftcard-cover{transform:scale(.95);}
+  .giftcard:active:not(:has(.card-heart:active)):not(:has(.card-info:active)) .giftcard-cover{transform:scale(.95);}
   .giftcard-inner{
     width:100%; height:100%; border-radius:14px; display:flex; flex-direction:column;
     align-items:center; justify-content:flex-end; overflow:hidden; position:relative;
