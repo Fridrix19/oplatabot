@@ -1,6 +1,7 @@
 /* Включает срабатывание :active на тап пальцем в мобильном Safari/Telegram
    webview — без этого пустого обработчика iOS игнорирует :active на div'ах. */
 document.addEventListener("touchstart", function(){}, true);
+if(window.Telegram?.WebApp){ Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
 
 /* ---------- Favorites (избранное) ---------- */
 let favorites = {};
@@ -927,7 +928,7 @@ document.querySelectorAll("#cart-pay-methods .pay-method").forEach(el=>{
 
 document.getElementById("cart-buy-btn").addEventListener("click", ()=>{
   const email = document.getElementById("cart-email-input").value.trim();
-  const emailValid = email.length > 0;
+  const emailValid = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   if(!emailValid){
     setCartEmailError(true);
@@ -2107,6 +2108,7 @@ document.getElementById("pkg-info-overlay").addEventListener("click", (e)=>{
 
 function openPaymentPage(config){
   paymentConfig = config;
+  const hint=document.getElementById("payment-email-hint"); if(hint) hint.textContent=(config.showId||config.showUsername)?"Ваш аккаунт пополнится в течение 5 минут.":"Код придет Вам прямо в чат и в раздел «Мои покупки» в течение 5 минут.";
   document.getElementById("payment-topbar-title").textContent = config.title;
   document.getElementById("payment-heading").textContent = config.heading || config.title;
   document.getElementById("payment-item-icon").style.background = config.itemImg
@@ -2216,7 +2218,7 @@ function openPaymentPage(config){
     usernameInputEl.style.display = "none";
   }
 
-  document.getElementById("payment-email-input").value = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ? String(window.Telegram.WebApp.initDataUnsafe.user.id) : "";
+  document.getElementById("payment-email-input").value = "";
   setPaymentFieldError("payment-id-input","payment-id-error", false);
   setPaymentFieldError("payment-server-trigger","payment-server-error", false);
   setPaymentFieldError("payment-zoneid-input","payment-zoneid-error", false);
@@ -2483,7 +2485,7 @@ document.getElementById("payment-buy-btn").addEventListener("click", ()=>{
   }
 
   const emailVal = document.getElementById("payment-email-input").value.trim();
-  const emailOk = emailVal.length > 0;
+  const emailOk = !emailVal || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
   setPaymentFieldError("payment-email-input","payment-email-error", !emailOk);
   if(!emailOk) firstInvalid = firstInvalid || "payment-email-input";
 
