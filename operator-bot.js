@@ -56,7 +56,9 @@ function attach(db, save, transport) {
             const order=db.orders.find(o => o.operatorMessageId === message.reply_to_message.message_id);
             if (!order) throw new Error('Ответьте на сообщение нужного заказа');
             if (order.fulfillmentType === 'topup') throw new Error('Для этого заказа используйте кнопку «Пополнено»');
-            deliver(db,order,message.text,'telegram:'+admin()); await save(); result='Код сохранён. Покупатель получит его в магазине и чате.';
+            deliver(db,order,message.text,'telegram:'+admin()); await save();
+            if(order.receiptFileId) await api('sendDocument',{chat_id:admin(),document:order.receiptFileId,caption:`Чек к заказу ${order.id}`});
+            result='Код сохранён. Чек прикреплён к заказу.';
           } else result='Чтобы выдать код, отправьте его ответом на сообщение оплаченного заказа.';
         } catch(e) {if(!e.status && !['Заказ для пополнения не найден','Ответьте на сообщение нужного заказа','Для этого заказа используйте кнопку «Пополнено»'].includes(e.message)) throw e; result=e.message;}
         if (callback) await api('answerCallbackQuery',{callback_query_id:callback.id,text:result});
