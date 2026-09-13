@@ -860,3 +860,6 @@
 .purchase-card[data-status="cancelled"] .purchase-status{background:#43333a;color:#e7bac6}
 .purchase-amount{font-weight:700;margin:8px 0}
 .purchase-card code{display:block;padding:12px;background:#080f1d;border-radius:8px;white-space:pre-wrap}
+/* Mobile admin and bottom navigation */
+@media (max-width:700px){body:has(aside) {display:block;padding-bottom:76px} body:has(aside) aside{width:100%;min-height:auto;padding:12px 16px;position:sticky;top:0;z-index:5} body:has(aside) aside h2{margin:0 0 8px} body:has(aside) aside nav{display:flex;gap:8px} body:has(aside) aside nav div{flex:1;text-align:center;padding:10px 6px;background:#202938;border-radius:10px} body:has(aside) main{padding:14px} body:has(aside) .cards{grid-template-columns:1fr} body:has(aside) .card img{height:180px} }
+.bottom-nav{display:none}@media(max-width:700px){.bottom-nav{position:fixed;display:flex;bottom:0;left:0;right:0;height:64px;background:#171c27;border-top:1px solid #303947;z-index:20;justify-content:space-around;align-items:center}.bottom-nav button{background:none;color:#cbd3e1;margin:0;flex:1;height:100%;border-radius:0}.bottom-nav button.active{color:#8da7ff;background:#222b3d}}

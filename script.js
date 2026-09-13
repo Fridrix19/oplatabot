@@ -3462,3 +3462,5 @@ document.querySelectorAll(".game-card[data-list]").forEach(card=>{
 });
 
 renderCart();
+/* Load administrator prices from the API so storefront reflects edits. */
+(async function syncCatalogPrices(){try{const r=await fetch('/api/products',{cache:'no-store'});if(!r.ok)return;const items=await r.json();const norm=s=>String(s).normalize('NFKC').replace(/[—–]/g,'-').replace(/\s+/g,' ').trim().toLowerCase();const byName=new Map(items.map(p=>[norm(p.name),p]));const walk=v=>{if(Array.isArray(v))v.forEach(walk);else if(v&&typeof v==='object'){if(typeof v.name==='string'){const p=byName.get(norm(v.name));if(p&&Number.isFinite(p.price)){v.price=p.price;v.priceNum=p.price;v.soldOut=p.soldOut}}Object.values(v).forEach(walk)}};walk(typeof giftCatalogs!=='undefined'?giftCatalogs:null);if(typeof games!=='undefined')walk(games);if(typeof subs!=='undefined')walk(subs);if(typeof renderAll==='function')renderAll();}catch(e){console.warn('Catalog price sync failed',e)}})();
