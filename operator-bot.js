@@ -14,6 +14,7 @@ function attach(db, save, transport) {
     return data.result;
   }
   async function customerApi(method,args){const t=(process.env.BOT_TOKEN||'').trim();if(!t)return null;const r=await fetch(`https://api.telegram.org/bot${t}/${method}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(15000)});const d=await r.json();if(!d.ok)throw new Error(d.description||'Telegram error');return d.result;}
+  async function forwardReceipt(order,fileId,isPhoto){const info=await api('getFile',{file_id:fileId});const src=await fetch(`https://api.telegram.org/file/bot${token()}/${info.file_path}`);const blob=await src.blob();const form=new FormData();form.append('chat_id',String(order.userId));form.append(isPhoto?'photo':'document',blob,'receipt');form.append('caption',`Чек по заказу ${order.id}`);const r=await fetch(`https://api.telegram.org/bot${(process.env.BOT_TOKEN||'').trim()}/${isPhoto?'sendPhoto':'sendDocument'}`,{method:'POST',body:form});const d=await r.json();if(!d.ok)throw new Error(d.description||'Не удалось отправить чек');}
   const send = text => api('sendMessage', {chat_id:admin(), text});
   function card(o) {
     return `${o.status === 'paid' ? '🟢 Оплачен — нужно выдать' : '✅ Выполнен'}\nЗаказ: ${o.id}\n${o.category || 'Товар'} — ${o.productName || 'Товар'}\nСумма: ${o.amount} ₽\nПокупатель: ${o.userId}${o.playerId ? '\nID / логин: '+o.playerId : ''}${o.zoneId ? '\nЗона: '+o.zoneId : ''}${o.gameServer ? '\nСервер: '+o.gameServer : ''}${o.status === 'paid' ? (o.fulfillmentType === 'topup' ? '\nПосле пополнения нажмите кнопку ниже.' : '\nОтправьте код ответом на это сообщение (функция «Ответить»).') : ''}`;
@@ -53,8 +54,7 @@ function attach(db, save, transport) {
             if (!order) throw new Error('Ответьте на сообщение нужного заказа');
             order.receiptFileId=message.photo ? message.photo[message.photo.length-1].file_id : message.document.file_id;
             order.receiptMime=message.document?.mime_type || 'image/jpeg';
-            if(message.photo) await customerApi('sendPhoto',{chat_id:order.userId,photo:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
-            else await customerApi('sendDocument',{chat_id:order.userId,document:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
+            await forwardReceipt(order,order.receiptFileId,Boolean(message.photo));
             await save(); result='';
           } else if (message.reply_to_message && message.text) {
             const order=db.orders.find(o => o.operatorMessageId === message.reply_to_message.message_id || o.receiptPromptMessageId === message.reply_to_message.message_id);
@@ -62,7 +62,7 @@ function attach(db, save, transport) {
             if (order.fulfillmentType === 'topup') throw new Error('Для этого заказа используйте кнопку «Пополнено»');
             deliver(db,order,message.text,'telegram:'+admin()); await save();
             if(order.receiptFileId) await api('sendDocument',{chat_id:admin(),document:order.receiptFileId,caption:`Чек к заказу ${order.id}`});
-            result='Код сохранён. Чек прикреплён к заказу.';
+            result='Код сохранён.';
           } else result='Чтобы выдать код, отправьте его ответом на сообщение оплаченного заказа.';
         } catch(e) {if(!e.status && !['Заказ для пополнения не найден','Ответьте на сообщение нужного заказа','Для этого заказа используйте кнопку «Пополнено»'].includes(e.message)) throw e; result=e.message;}
         if (callback) await api('answerCallbackQuery',{callback_query_id:callback.id,text:result});
