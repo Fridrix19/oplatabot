@@ -24,8 +24,11 @@
       lastSignature='';lastKey='';
       hideSubView();showToast('Оплатите товар в Telegram');
       window.refreshPurchases?.();
-      if(order.botUrl){Telegram.WebApp.openTelegramLink(order.botUrl);Telegram.WebApp.close();}
-      else throw new Error('В настройках сервера не указан BOT_USERNAME');
+      if(order.paymentUrl){
+        const paymentUrl=new URL(order.paymentUrl,location.origin).href;
+        if(Telegram.WebApp.openLink) Telegram.WebApp.openLink(paymentUrl);
+        else window.open(paymentUrl,'_blank','noopener');
+      } else throw new Error('Ссылка оплаты не создана');
     }catch(e){showToast(e.message);}finally{busy=false;}
   };
   // Cart is no longer a navigable feature; legacy DOM is removed after binding.
