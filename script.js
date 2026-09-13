@@ -702,7 +702,7 @@ function renderCart(){
     promoPanel.style.display = "none";
     promoApplied.style.display = "none";
     checkoutCard.style.display = "none";
-    emailInput.value = "";
+  emailInput.value = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ? String(window.Telegram.WebApp.initDataUnsafe.user.id) : "";
     setCartEmailError(false);
     setPromoError("cart", false);
     document.getElementById("cart-promo-success").classList.remove("show");
@@ -927,7 +927,7 @@ document.querySelectorAll("#cart-pay-methods .pay-method").forEach(el=>{
 
 document.getElementById("cart-buy-btn").addEventListener("click", ()=>{
   const email = document.getElementById("cart-email-input").value.trim();
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const emailValid = email.length > 0;
 
   if(!emailValid){
     setCartEmailError(true);
@@ -2216,7 +2216,7 @@ function openPaymentPage(config){
     usernameInputEl.style.display = "none";
   }
 
-  document.getElementById("payment-email-input").value = "";
+  document.getElementById("payment-email-input").value = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ? String(window.Telegram.WebApp.initDataUnsafe.user.id) : "";
   setPaymentFieldError("payment-id-input","payment-id-error", false);
   setPaymentFieldError("payment-server-trigger","payment-server-error", false);
   setPaymentFieldError("payment-zoneid-input","payment-zoneid-error", false);
@@ -2483,7 +2483,7 @@ document.getElementById("payment-buy-btn").addEventListener("click", ()=>{
   }
 
   const emailVal = document.getElementById("payment-email-input").value.trim();
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+  const emailOk = emailVal.length > 0;
   setPaymentFieldError("payment-email-input","payment-email-error", !emailOk);
   if(!emailOk) firstInvalid = firstInvalid || "payment-email-input";
 
