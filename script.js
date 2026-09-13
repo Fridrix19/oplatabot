@@ -3087,6 +3087,8 @@ document.querySelectorAll(".list-row[data-catalog]").forEach(row=>{
    сбрасывает стек. */
 let currentView = "view-home";
 let viewStack = [];
+const tgBack = window.Telegram?.WebApp?.BackButton;
+if(tgBack){ tgBack.onClick(()=>goBack()); tgBack.hide(); }
 
 function tabNameForView(id){
   const map = {"view-home":"home", "view-fav":"fav", "view-purchases":"purchases", "view-profile":"profile"};
@@ -3162,6 +3164,7 @@ function showSubView(id){
   syncCartBuyMode(id);
   syncLegalMode(id);
   if(id === "view-product") updateProductBuyState();
+  if(tgBack){ if(viewStack.length) tgBack.show(); else tgBack.hide(); }
 }
 
 function goBack(){
@@ -3175,9 +3178,11 @@ function goBack(){
   syncCartBuyMode(prev);
   syncLegalMode(prev);
   if(prev === "view-product") updateProductBuyState();
+  if(tgBack){ if(viewStack.length) tgBack.show(); else tgBack.hide(); }
 }
 
 function hideSubView(){
+  if(tgBack) tgBack.hide();
   viewStack = [];
   currentView = "view-home";
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
