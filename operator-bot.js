@@ -54,7 +54,7 @@ function attach(db, save, transport) {
             order.receiptMime=message.document?.mime_type || 'image/jpeg';
             if(message.photo) await api('sendPhoto',{chat_id:order.userId,photo:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
             else await api('sendDocument',{chat_id:order.userId,document:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
-            await save(); result='Чек прикреплён к заказу.';
+            await save(); result='';
           } else if (message.reply_to_message && message.text) {
             const order=db.orders.find(o => o.operatorMessageId === message.reply_to_message.message_id || o.receiptPromptMessageId === message.reply_to_message.message_id);
             if (!order) throw new Error('Ответьте на сообщение нужного заказа');
@@ -65,7 +65,7 @@ function attach(db, save, transport) {
           } else result='Чтобы выдать код, отправьте его ответом на сообщение оплаченного заказа.';
         } catch(e) {if(!e.status && !['Заказ для пополнения не найден','Ответьте на сообщение нужного заказа','Для этого заказа используйте кнопку «Пополнено»'].includes(e.message)) throw e; result=e.message;}
         if (callback) await api('answerCallbackQuery',{callback_query_id:callback.id,text:result});
-        else await send(result);
+        else if(result) await send(result);
       } else if (callback) await api('answerCallbackQuery',{callback_query_id:callback.id,text:'Нет доступа'});
       db.operatorOffset=update.update_id+1; await save();
     }
