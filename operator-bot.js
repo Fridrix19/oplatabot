@@ -13,6 +13,7 @@ function attach(db, save, transport) {
     }
     return data.result;
   }
+  async function customerApi(method,args){const t=(process.env.BOT_TOKEN||'').trim();if(!t)return null;const r=await fetch(`https://api.telegram.org/bot${t}/${method}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(15000)});const d=await r.json();if(!d.ok)throw new Error(d.description||'Telegram error');return d.result;}
   const send = text => api('sendMessage', {chat_id:admin(), text});
   function card(o) {
     return `${o.status === 'paid' ? '🟢 Оплачен — нужно выдать' : '✅ Выполнен'}\nЗаказ: ${o.id}\n${o.category || 'Товар'} — ${o.productName || 'Товар'}\nСумма: ${o.amount} ₽\nПокупатель: ${o.userId}${o.playerId ? '\nID / логин: '+o.playerId : ''}${o.zoneId ? '\nЗона: '+o.zoneId : ''}${o.gameServer ? '\nСервер: '+o.gameServer : ''}${o.status === 'paid' ? (o.fulfillmentType === 'topup' ? '\nПосле пополнения нажмите кнопку ниже.' : '\nОтправьте код ответом на это сообщение (функция «Ответить»).') : ''}`;
@@ -52,8 +53,8 @@ function attach(db, save, transport) {
             if (!order) throw new Error('Ответьте на сообщение нужного заказа');
             order.receiptFileId=message.photo ? message.photo[message.photo.length-1].file_id : message.document.file_id;
             order.receiptMime=message.document?.mime_type || 'image/jpeg';
-            if(message.photo) await api('sendPhoto',{chat_id:order.userId,photo:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
-            else await api('sendDocument',{chat_id:order.userId,document:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
+            if(message.photo) await customerApi('sendPhoto',{chat_id:order.userId,photo:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
+            else await customerApi('sendDocument',{chat_id:order.userId,document:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
             await save(); result='';
           } else if (message.reply_to_message && message.text) {
             const order=db.orders.find(o => o.operatorMessageId === message.reply_to_message.message_id || o.receiptPromptMessageId === message.reply_to_message.message_id);
