@@ -28,6 +28,7 @@ function attach(db, save, transport) {
         if (o.operatorMessageId) await api('editMessageText', {...payload,message_id:o.operatorMessageId});
         else {const m = await api('sendMessage',payload); o.operatorMessageId=m.message_id;}
         o.operatorNotifiedStatus=o.status; await save();
+        if(o.status==='delivered') { const prompt=await api('sendMessage',{chat_id:admin(),text:`✅ Выполнен\nЗаказ: ${o.id}\nОтветьте на это сообщение текстом или изображением чека — покупатель получит его после оплаты.`}); if(prompt) o.receiptPromptMessageId=prompt.message_id; await save(); }
       } catch(e) {console.error('Operator notification:', e.message); break;}
     }
   }
@@ -47,13 +48,15 @@ function attach(db, save, transport) {
           } else if (message.text === '/start') {
             result='Здесь появятся оплаченные заказы. Для выдачи кода ответьте на сообщение заказа. Для пополнений используйте кнопку «Пополнено».';
           } else if (message.reply_to_message && (message.photo || message.document)) {
-            const order=db.orders.find(o => o.operatorMessageId === message.reply_to_message.message_id);
+            const order=db.orders.find(o => (o.operatorMessageId||o.receiptPromptMessageId) === message.reply_to_message.message_id);
             if (!order) throw new Error('Ответьте на сообщение нужного заказа');
             order.receiptFileId=message.photo ? message.photo[message.photo.length-1].file_id : message.document.file_id;
             order.receiptMime=message.document?.mime_type || 'image/jpeg';
+            if(message.photo) await api('sendPhoto',{chat_id:order.userId,photo:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
+            else await api('sendDocument',{chat_id:order.userId,document:order.receiptFileId,caption:`Чек по заказу ${order.id}`});
             await save(); result='Чек прикреплён к заказу.';
           } else if (message.reply_to_message && message.text) {
-            const order=db.orders.find(o => o.operatorMessageId === message.reply_to_message.message_id);
+            const order=db.orders.find(o => (o.operatorMessageId||o.receiptPromptMessageId) === message.reply_to_message.message_id);
             if (!order) throw new Error('Ответьте на сообщение нужного заказа');
             if (order.fulfillmentType === 'topup') throw new Error('Для этого заказа используйте кнопку «Пополнено»');
             deliver(db,order,message.text,'telegram:'+admin()); await save();
