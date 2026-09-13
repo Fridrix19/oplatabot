@@ -25,6 +25,13 @@ function attach(app,db,save,admin,transport){
     const r=await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${method}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(15000)});
     const data=await r.json();if(!data.ok){if(data.description?.includes('message is not modified'))return null;throw new Error(`Telegram ${data.error_code}: ${data.description}`);}return data.result;
   }
+  async function heleketInvoice(o){
+    const merchant=(process.env.HELEKET_MERCHANT_ID||'').trim(), key=(process.env.HELEKET_API_KEY||'').trim();
+    if(!merchant||!key)return null;
+    const body={amount:String(o.amount),currency:process.env.HELEKET_CURRENCY||'RUB',order_id:o.id,url_callback:(process.env.HELEKET_CALLBACK_URL||`${base()}/api/payments/heleket/webhook`),url_return:base()+'/?page=purchases',url_success:base()+'/?page=purchases',lifetime:600};
+    const sign=crypto.createHash('md5').update(Buffer.from(JSON.stringify(body)).toString('base64')+key).digest('hex');
+    const r=await fetch('https://api.heleket.com/v1/payment',{method:'POST',headers:{merchant,sign,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const d=await r.json();if(!r.ok||d.state===false)throw new Error(d.message||'Heleket: не удалось создать счёт');return d.result?.url||d.url;
+  }
   const locks=new Set();
   async function notify(o){
     if(locks.has(o.id)||!process.env.BOT_TOKEN||!/^https:\/\//.test(base()))return;
@@ -58,7 +65,9 @@ function attach(app,db,save,admin,transport){
     if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Некорректная сумма'});
     const id='ORD-'+crypto.randomUUID();
     const o={id,userId:req.telegramUser.id,productId:p.id,productName:name||p.name,category:metadata?.category||p.category,amount,status:'awaiting_payment',fulfillmentType,playerId,zoneId,gameServer,checkoutKey:key,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+600000).toISOString(),paymentToken:crypto.randomBytes(24).toString('hex')};
-    o.paymentUrl='/api/payments/'+id+'?token='+o.paymentToken;db.orders.push(o);await save();res.status(201).json(result(o));
+    o.paymentUrl='/api/payments/'+id+'?token='+o.paymentToken;db.orders.push(o);await save();
+    if(process.env.HELEKET_API_KEY&&process.env.HELEKET_MERCHANT_ID){try{o.heleketUrl=await heleketInvoice(o);o.paymentUrl=o.heleketUrl;await save();}catch(e){db.orders=db.orders.filter(x=>x!==o);await save();return res.status(502).json({error:e.message});}}
+    res.status(201).json(result(o));
   }catch(e){next(e);}});
   function payment(req,res,next){const o=db.orders.find(o=>o.id===req.params.id);if(!o||!o.paymentToken||req.query.token!==o.paymentToken)return res.status(404).json({error:'Ссылка оплаты недействительна'});req.order=o;next();}
   app.get('/api/payments/:id',payment,async(req,res)=>{if(expire(req.order)){await save();}res.sendFile(require('path').join(__dirname,'payment.html'));});
@@ -70,6 +79,7 @@ function attach(app,db,save,admin,transport){
     const product=db.products.find(p=>p.id===o.productId);if(!product||product.stock<=0)return res.status(409).json({error:'Нет в наличии'});
     product.stock--;o.status='paid';o.paidAt=new Date().toISOString();await save();res.json({status:o.status});
   }catch(e){next(e);}});
+  app.post('/api/payments/heleket/webhook',async(req,res)=>{try{const key=(process.env.HELEKET_API_KEY||'').trim();const provided=String(req.headers.sign||'');const raw=JSON.stringify(req.body);const expected=crypto.createHash('md5').update(Buffer.from(raw).toString('base64')+key).digest('hex');if(!key||provided!==expected)return res.sendStatus(401);const p=req.body.data||req.body,o=db.orders.find(x=>x.id===p.order_id);if(!o)return res.sendStatus(404);if(['paid','paid_over'].includes(p.status)&&o.status==='awaiting_payment'){const product=db.products.find(x=>x.id===o.productId);if(!product||product.stock<=0)return res.sendStatus(409);product.stock--;o.status='paid';o.paidAt=new Date().toISOString();o.heleketStatus=p.status;await save();}else {o.heleketStatus=p.status;await save();}res.json({ok:true});}catch(e){console.error('Heleket webhook:',e.message);res.sendStatus(500);}});
   app.post('/api/payments/:id/webhook',(req,res)=>res.status(404).json({error:'Настоящая платёжная система пока не подключена'}));
   app.patch('/api/admin/orders/:id',admin,async(req,res,next)=>{try{
     if(req.body.action!=='deliver')return res.status(400).json({error:'Выберите выдачу'});
