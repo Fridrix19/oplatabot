@@ -15,7 +15,7 @@ function attach(app,db,save,admin,transport){
     return details+'\n\nОплатите заказ в течение 10 минут.';
   }
   function keyboard(o){
-    if(pending(o)&&!expired(o)){const sec=Math.max(0,Math.ceil((Date.parse(o.expiresAt)-Date.now())/1000));return {inline_keyboard:[[{text:`Перейти к оплате · ${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`,url:base()+o.paymentUrl}]]};}
+    if(pending(o)&&!expired(o)){const sec=Math.max(0,Math.ceil((Date.parse(o.expiresAt)-Date.now())/1000));return {inline_keyboard:[[{text:`Перейти к оплате · ${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`,url:new URL(o.paymentUrl,base()).href}]]};}
     if(o.status==='delivered')return {inline_keyboard:[[{text:'Оставить отзыв',url:reviews}]]};
     return {inline_keyboard:[[{text:'Мои покупки',web_app:{url:purchases()}}]]};
   }
@@ -57,22 +57,30 @@ function attach(app,db,save,admin,transport){
     const playerId=String(req.body.playerId||'').trim().slice(0,120),zoneId=String(req.body.zoneId||'').trim().slice(0,120),gameServer=String(req.body.gameServer||'').trim().slice(0,120);
     const fulfillmentType=metadata?.fulfillmentType||(playerId?'topup':'code');
     if(fulfillmentType==='topup'&&!playerId)return res.status(400).json({error:'Укажите ID или логин получателя'});
+    const paymentMethod=req.body.paymentMethod||'test';
+    if(!['crypto','sbp','card','test'].includes(paymentMethod))return res.status(400).json({error:'Неизвестный способ оплаты'});
+    if(paymentMethod==='crypto'&&(!(process.env.HELEKET_API_KEY||'').trim()||!(process.env.HELEKET_MERCHANT_ID||'').trim()))return res.status(503).json({error:'Криптооплата временно недоступна'});
     const key=String(req.body.checkoutKey||'');
     const previous=key&&db.orders.find(o=>o.userId===req.telegramUser.id&&o.checkoutKey===key);
     const result=o=>({...o,botUrl:process.env.BOT_USERNAME?`https://t.me/${process.env.BOT_USERNAME.replace(/^@/,'')}?start=pay_${o.id}`:null});
-    if(previous)return res.json(result(previous));
+    if(previous){
+      if((previous.paymentMethod||(previous.heleketUrl?'crypto':'test'))!==paymentMethod)return res.status(409).json({error:'Способ оплаты изменился. Создайте новый заказ.'});
+      return res.json(result(previous));
+    }
     const amount=Number(req.body.amount); // Existing demo catalog has incomplete variant prices.
     if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Некорректная сумма'});
     const id='ORD-'+crypto.randomUUID();
     const o={id,userId:req.telegramUser.id,productId:p.id,productName:name||p.name,category:metadata?.category||p.category,amount,status:'awaiting_payment',fulfillmentType,playerId,zoneId,gameServer,checkoutKey:key,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+600000).toISOString(),paymentToken:crypto.randomBytes(24).toString('hex')};
+    o.paymentMethod=paymentMethod;
     o.paymentUrl='/api/payments/'+id+'?token='+o.paymentToken;db.orders.push(o);await save();
-    if(process.env.HELEKET_API_KEY&&process.env.HELEKET_MERCHANT_ID){try{o.heleketUrl=await heleketInvoice(o);o.paymentUrl=o.heleketUrl;await save();}catch(e){db.orders=db.orders.filter(x=>x!==o);await save();return res.status(502).json({error:e.message});}}
+    if(paymentMethod==='crypto'){try{o.heleketUrl=await heleketInvoice(o);if(!o.heleketUrl)throw new Error('Heleket: ссылка оплаты не получена');o.paymentUrl=o.heleketUrl;await save();}catch(e){db.orders=db.orders.filter(x=>x!==o);await save();return res.status(502).json({error:e.message});}}
     res.status(201).json(result(o));
   }catch(e){next(e);}});
   function payment(req,res,next){const o=db.orders.find(o=>o.id===req.params.id);if(!o||!o.paymentToken||req.query.token!==o.paymentToken)return res.status(404).json({error:'Ссылка оплаты недействительна'});req.order=o;next();}
   app.get('/api/payments/:id',payment,async(req,res)=>{if(expire(req.order)){await save();}res.sendFile(require('path').join(__dirname,'payment.html'));});
   app.get('/api/payments/:id/status',payment,(req,res)=>res.json({status:req.order.status,expiresAt:req.order.expiresAt}));
   app.post('/api/payments/:id/demo',payment,async(req,res,next)=>{try{
+    if(req.order.paymentMethod==='crypto'||req.order.heleketUrl)return res.status(409).json({error:'Криптоплатёж подтверждается только через Heleket'});
     const o=req.order;if(expire(o)){await save();}
     if(['paid','delivered'].includes(o.status))return res.json({status:o.status});
     if(!pending(o))return res.status(409).json({error:'Заказ отменён'});
