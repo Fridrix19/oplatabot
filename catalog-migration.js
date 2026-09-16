@@ -11,4 +11,21 @@ function migrate(db, entries=require('./catalog-meta.json')) {
   }
   return added;
 }
-module.exports={migrate};
+// Games and PS Plus subscriptions were removed from the storefront.
+const RETIRED=['GRAND THEFT AUTO VI','EA FC 26','Steelbound Trilogy','Crimson Order: Origins','Ironclad Frontier','Requiem: Blackout','Solace Drift Racing','Colony Two',"Reaper's Call: Black Ice",'Skyline Drift','ESSENTIAL','EXTRA','DELUXE','EA Play'];
+function retire(db){
+  const norm=s=>String(s||'').normalize('NFKC').replace(/\s+/g,' ').trim().toLowerCase();
+  const retired=new Set(RETIRED.map(norm));
+  const isRetired=p=>retired.has(norm(p.name))||p.category==='Игры';
+  const used=new Set((db.orders||[]).map(o=>o.productId));
+  let changed=0;
+  db.products=db.products.filter(p=>{
+    if(!isRetired(p))return true;
+    changed++;
+    if(!used.has(p.id))return false;
+    p.status='disabled';// keep purchase history readable
+    return true;
+  });
+  return changed;
+}
+module.exports={migrate,retire};

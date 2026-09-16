@@ -73,7 +73,7 @@ function renderFavoritesView(){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.9-10-9.3C.5 8.1 2.3 4.5 6 4.1c2-.2 3.6.9 6 3.4 2.4-2.5 4-3.6 6-3.4 3.7.4 5.5 4 4 7.6-2.5 4.4-10 9.3-10 9.3z"/></svg>
       </div>
       <div class="empty-title">Пока пусто</div>
-      <div class="empty-sub">Добавляйте игры и подписки в избранное, нажав на сердечко в карточке товара</div>
+      <div class="empty-sub">Добавляйте товары в избранное, нажав на сердечко в карточке товара</div>
       <button class="empty-btn" onclick="hideSubView()">Открыть каталог</button>
     </div>`;
     return;
@@ -104,9 +104,7 @@ function renderFavoritesView(){
 function openFavoriteItem(id){
   const parts = id.split(":");
   const type = parts[0];
-  if(type === "game"){
-    openProduct(parts[1], parseInt(parts[2],10));
-  } else if(type === "donate"){
+  if(type === "donate"){
     if(!donateServices[parts[1]]) return showToast('Этот сервис больше не представлен в каталоге');
     openTopup(parts[1]);
   } else if(type === "giftcard"){
@@ -128,29 +126,6 @@ function openFavoriteItem(id){
     return showToast('Этот вариант больше не представлен в каталоге');
   }
 }
-
-/* ---------- Generic promo-code UI helpers (shared by cart / payment / tgstars / tgprem) ---------- */
-function setPromoError(prefix, show, text){
-  const errEl = document.getElementById(`${prefix}-promo-error`);
-  if(text) errEl.textContent = text;
-  errEl.classList.toggle("show", show);
-  if(show) document.getElementById(`${prefix}-promo-success`).classList.remove("show");
-}
-
-function setPromoSuccess(prefix, text){
-  const okEl = document.getElementById(`${prefix}-promo-success`);
-  okEl.textContent = text;
-  okEl.classList.add("show");
-  setPromoError(prefix, false);
-}
-
-const countryNames = {IN:"Индия", TR:"Турция"};
-/* Чтобы вместо флага-эмодзи показать фото рядом с "PS Store Индия/Турция"
-   в корзине — впиши ссылку сюда. Оставь null, чтобы остался флаг. */
-const countryGroupImg = {IN:null, TR:null};
-const editionOrder = ["standard","deluxe","premium"];
-const editionLabels = {standard:"Standard", deluxe:"Deluxe", premium:"Premium"};
-const gameCountryCodes = ["IN","TR"];
 
 /* ---------- Gift card catalog (Сервисы пополнения) ----------
    Чтобы добавить фото товара (как в разделе "Игровой донат"/каталог игр),
@@ -351,57 +326,6 @@ items:[
 };
 
 
-const games = {
-  bestsellers: [
-    {name:"GRAND THEFT AUTO VI", edition:null, price:"14 995 ₽", old: "18 000 ₽", img:"https://avatars.mds.yandex.net/get-mpic/16145913/2a0000019f32216e6e123875b004e19690c9/orig", grad:"linear-gradient(135deg,#3A1F5C,#1A0E2E)",editions:{standard:{price:2690, old:5990, byCountry:{IN:{price:1990, old:4490, native:14999}, TR:{price:2290, old:4990, native:1999}}}, ultimate:{price:2690, old:5990,label: "ultimote", byCountry:{IN:{price:1990, old:14490, native:7999}, TR:{price:2290, old:24990, native:8999}}}} },
-    {name:"EA FC 26", edition:null, price:"745 ₽", old:"7 450 ₽", badge:"-90%", img:"https://avatars.mds.yandex.net/get-mpic/12300570/2a0000019ad0f74c28f4e0f842000c404c89/orig", grad:"linear-gradient(135deg,#1E1E1E,#0A0A0A)"},
-    {name:"Steelbound Trilogy", edition:null, price:"1 310 ₽", old:"5 240 ₽", badge:"-75%", img:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='500'><rect width='400' height='500' fill='%232F6B2F'/><circle cx='200' cy='200' r='90' fill='%23fff' fill-opacity='0.15'/></svg>", grad:"linear-gradient(135deg,#1B3B1B,#0C1C0C)",countries:["IN"] /* доступна только для аккаунтов Индии */},
-    {name:"Crimson Order: Origins", edition:"Gold", price:"160 ₽", old:"1 066 ₽", badge:"-85%", img:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='500'><rect width='400' height='500' fill='%23C29A3B'/><circle cx='200' cy='200' r='90' fill='%23fff' fill-opacity='0.15'/></svg>", grad:"linear-gradient(135deg,#8A6A1E,#3D2E0C)"},
-    {name:"Ironclad Frontier", edition:"Standard", price:"2 690 ₽", old:"5 990 ₽", badge:"-55%", grad:"linear-gradient(135deg,#123049,#081522)", editions:{standard:{price:2690, old:5990}, ultimate:{price:3890, old:6490, label:"Ultimate"}} /* доступно только издание Standard */},
-    {name:"Requiem: Blackout", edition:"Deluxe", price:"3 890 ₽", old:"6 490 ₽", badge:"-40%", grad:"linear-gradient(135deg,#4A1414,#1E0A0A)", editions:{gold:{price:2890, old:5490, label:"Gold"}, ultimate:{price:3890, old:6490, label:"Ultimate Edition"}} /* пример своих названий изданий вместо Standard/Deluxe/Premium */},
-    {name:"Solace Drift Racing", edition:null, price:"1 990 ₽", old:"3 490 ₽", badge:"-43%", grad:"linear-gradient(135deg,#2B4A12,#12200A)"},
-  ],
-  newreleases: [
-    {name:"Colony Two", edition:null, price:"3 490 ₽", grad:"linear-gradient(135deg,#2B4A12,#12200A)", editions:{standard:{price:3490, old:null}} /* доступно только издание Standard */},
-    {name:"Reaper's Call: Black Ice", edition:null, price:"4 190 ₽", grad:"linear-gradient(135deg,#101018,#050508)"},
-    {name:"Skyline Drift", edition:null, price:"2 990 ₽", grad:"linear-gradient(135deg,#123049,#081522)"},
-  ]
-};
-
-/* Цена на карточке в каталоге (Хиты продаж/Новинки/Предзаказ) теперь не
-   вписывается отдельно вручную — она берётся из той же функции, что считает
-   цену на странице товара и в корзине (getProductPricing), для издания и
-   страны по умолчанию. Так что если у игры задана цена карт пополнения
-   (`native`), на главной сразу будет видна именно та сумма, которую реально
-   спишут за нужные карты — а не отдельно вписанная цифра, которая могла
-   разъехаться с корзиной. Поле `price` в объекте игры при этом используется
-   только как запасной вариант, если `native` не задана. */
-function cardHTML(g, listKey, idx){
-  const favId = `game:${listKey}:${idx}`;
-  const {price, old} = getCheapestPricing(g);
-
-  favoriteCandidates[favId] = {
-    name: g.name, price, old: old || null,
-    grad: g.grad, img: g.img || null, sub: g.edition || null
-  };
-  return `<div class="game-card" data-list="${listKey}" data-idx="${idx}">
-    <div class="cover" style="background:${g.img ? `url('${g.img}') center/cover no-repeat` : g.grad};">
-      ${heartHTML(favId)}
-      ${g.badge ? `<div class="badge">${g.badge}</div>` : ""}
-    </div>
-    <div class="game-name">${g.name}</div>
-    <div class="price-row"><div class="price">${price}</div></div>
-    ${old ? `<div class="old-price">${old}</div>` : ""}
-    ${g.edition ? `<div class="game-sub">${g.edition}</div>` : ""}
-  </div>`;
-}
-
-/* Сама отрисовка каталога (bestsellers/newreleases, если появятся на главной)
-   вызывается ниже, в самом конце скрипта — после того как определены
-   getGameEditions/getProductPricing и giftCatalogs, потому что cardHTML
-   теперь считает "настоящую" цену товара (см. renderCatalogGrids()). */
-
-/* ---------- Cart logic ---------- */
 /* ---------- Orders / "Мои покупки" ----------
    Каждый оформленный заказ (из корзины, доната, пополнения или Telegram
    Stars) попадает сюда со статусом "processing". Через некоторое время
@@ -412,11 +336,6 @@ function cardHTML(g, listKey, idx){
    смотрит на список покупок — он перерисовывается сам. */
 let orders = [];
 let orderIdSeq = 1001;
-
-function generatePurchaseCode(){
-  const seg = ()=> Math.random().toString(36).slice(2,7).toUpperCase();
-  return `${seg()}-${seg()}-${seg()}`;
-}
 
 function createOrder(items,totalLabel,email){return window.checkoutOrder(items,totalLabel,email);}
 
@@ -541,36 +460,6 @@ document.getElementById("purchases-row").addEventListener("click", ()=>{
 });
 document.getElementById("purchases-back").addEventListener("click", ()=> goBack());
 
-let cart = [];
-
-/* Demo promo codes for the cart (percent off the grand total). Feel free to
-   add more — key is matched case-insensitively against what the user types. */
-const cartPromoCodes = {"METRA10":10, "STARS15":15, "WELCOME20":20};
-let cartPromo = {code:"", discountPercent:0};
-let cartFinalTotal = 0;
-
-function isInCart(name){
-  return cart.some(c => c.name === name);
-}
-
-function addToCart(game){
-  return window.buySingleItem(game);
-
-  const existing = cart.find(c => c.name === game.name);
-  if(existing){
-    existing.qty += 1;
-  } else {
-    cart.push({...game, qty:1});
-  }
-  renderCart();
-  flashAdded(game);
-}
-
-function removeFromCart(idx){
-  cart.splice(idx,1);
-  renderCart();
-}
-
 function priceToNumber(str){
   if(typeof str !== "string") return Number(str) || 0;
   // Russian formatting uses a space as thousands separator and a comma as decimal separator.
@@ -581,459 +470,6 @@ function priceToNumber(str){
   return isNaN(num) ? 0 : num;
 }
 
-/* ---------- PS Store card math (used to figure out which recharge cards
-   cover the games a person put in the cart) ----------
-   Each game in the cart is bought on a specific PS Store account region
-   (Индия / Турция). We don't sell the game directly — we sell recharge
-   cards for that region's PS Store balance. So for every region present
-   in the cart we:
-   1) convert each game's ruble price into that region's native currency,
-      using the exchange rate implied by the real card prices already
-      defined in giftCatalogs.psstore (so it always matches what the
-      cards actually cost);
-   2) figure out, greedily from the largest denomination down, exactly
-      which cards (and how many of each) are needed to cover that amount;
-   3) show the leftover balance that will sit on the account afterwards. */
-const nativeUnitLabel = {IN:"Rs", TR:"₺"};
-
-function getPsCountryCatalog(code){
-  return giftCatalogs.psstore.countries.find(c=>c.code===code);
-}
-
-function parseAmountNumber(amountStr){
-  return parseInt(String(amountStr).replace(/[^\d]/g,""), 10);
-}
-
-/* ₽ per 1 unit of native currency, derived from the first (smallest) card
-   in that region's catalog — every other denomination in the catalog is
-   priced proportionally to this same rate. */
-function getCountryRate(code){
-  const cat = getPsCountryCatalog(code);
-  const first = cat.items[0];
-  return first.price / parseAmountNumber(first.amount);
-}
-
-/* Greedily picks cards (largest denomination first) to cover targetAmount
-   in the region's native currency. Returns the chosen cards, the total
-   native amount they add up to (>= targetAmount), their combined ₽ cost,
-   and the leftover balance that stays on the account. */
-function calcCardsForAmount(code, targetAmount){
-  const cat = getPsCountryCatalog(code);
-  const denoms = cat.items
-    .map(it=>({amount:parseAmountNumber(it.amount), price:it.price, item:it}))
-    .sort((a,b)=> b.amount - a.amount);
-
-  let remaining = Math.max(0, Math.ceil(targetAmount));
-  const picks = [];
-  denoms.forEach(d=>{
-    if(remaining <= 0) return;
-    const qty = Math.floor(remaining / d.amount);
-    if(qty > 0){
-      picks.push({...d, qty});
-      remaining -= qty * d.amount;
-    }
-  });
-  if(remaining > 0){
-    const smallest = denoms[denoms.length-1];
-    const existing = picks.find(p=>p.amount === smallest.amount);
-    if(existing) existing.qty += 1; else picks.push({...smallest, qty:1});
-    remaining -= smallest.amount;
-  }
-
-  /* Греедный проход по убыванию номинала иногда даёт «несколько карт самого
-     мелкого номинала» там, где эту же часть суммы закрывает ОДНА карта
-     покрупнее почти за ту же цену (например для остатка 448 ₺: 500 ₺ card
-     пропускается на первом проходе, т.к. floor(448/500)=0, и добавляются
-     2× 250 ₺, хотя 1× 500 ₺ покрывает тот же остаток почти за ту же цену).
-     Проверяем именно самый мелкий номинал в итоговом плане (а не только
-     случай, когда план целиком состоит из одной позиции) — если он взят
-     2+ раза, пробуем заменить эту пачку одной картой покрупнее. */
-  const smallestDenom = denoms[denoms.length-1];
-  const smallEntry = picks.find(p => p.amount === smallestDenom.amount);
-  if(smallEntry && smallEntry.qty > 1){
-    const subTotalCost = smallEntry.price * smallEntry.qty;
-    const bigger = denoms
-      .filter(d => d.amount > smallEntry.amount && d.amount >= smallEntry.amount * smallEntry.qty)
-      .sort((a,b)=> a.amount - b.amount)[0];
-    if(bigger && bigger.price <= subTotalCost * 1.1){
-      picks.splice(picks.indexOf(smallEntry), 1);
-      const existingBigger = picks.find(p => p.amount === bigger.amount);
-      if(existingBigger) existingBigger.qty += 1; else picks.push({...bigger, qty:1});
-    }
-  }
-
-  const totalAmount = picks.reduce((s,p)=> s + p.amount*p.qty, 0);
-  const totalCost = picks.reduce((s,p)=> s + p.price*p.qty, 0);
-  return {picks, totalAmount, totalCost, leftover: totalAmount - targetAmount};
-}
-
-function renderCart(){
-  return;
-
-  const container = document.getElementById("cart-items");
-  const headSub = document.getElementById("cx-head-sub");
-  const promoToggle = document.getElementById("cx-promo-toggle");
-  const promoPanel = document.getElementById("cx-promo-panel");
-  const promoApplied = document.getElementById("cx-promo-applied");
-  const receipt = document.getElementById("cx-receipt");
-  const checkoutCard = document.getElementById("cx-checkout-card");
-  const emailInput = document.getElementById("cart-email-input");
-  const buyBar = document.getElementById("cx-buybar");
-  const totalCount = cart.reduce((s,c)=>s+c.qty,0);
-
-  document.querySelector('.navitem[data-view="cart"] .nav-badge').textContent = totalCount;
-  document.querySelector('.navitem[data-view="cart"] .nav-badge').style.display = totalCount>0 ? "flex" : "none";
-  titles.cart = ["Корзина", totalCount>0 ? `${totalCount} товар(а)` : "пусто"];
-
-  /* Кнопка "Назад" в шапке корзины нужна только тогда, когда в корзине
-     что-то есть (то есть только что был добавлен товар и есть куда
-     возвращаться) — если корзина пуста, скрывается весь верхний блок
-     целиком (а не только кнопка), чтобы над "Корзина" не оставалось
-     пустого отступа. */
-  document.getElementById("cart-topbar").style.display = cart.length > 0 ? "flex" : "none";
-
-  if(cart.length === 0){
-    container.innerHTML = `<div class="empty-state" style="padding:60px 20px; text-align:center;">
-      <div class="empty-title">Корзина пуста</div>
-      <div class="empty-sub">Нажмите на товар в каталоге, чтобы добавить его сюда</div>
-      <button class="empty-btn" onclick="hideSubView()">Открыть каталог</button>
-    </div>`;
-    headSub.textContent = "";
-    promoToggle.style.display = "none";
-    promoPanel.style.display = "none";
-    promoApplied.style.display = "none";
-    checkoutCard.style.display = "none";
-  emailInput.value = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ? String(window.Telegram.WebApp.initDataUnsafe.user.id) : "";
-    setCartEmailError(false);
-    setPromoError("cart", false);
-    document.getElementById("cart-promo-success").classList.remove("show");
-    buyBar.style.display = "none";
-    cartFinalTotal = 0;
-    syncCartBuyMode(currentView);
-    return;
-  }
-
-  headSub.textContent = `${totalCount} ${totalCount===1 ? "товар" : "товара"} в корзине`;
-
-  const withIdx = cart.map((g, idx)=> ({...g, idx}));
-  /* Подписки (type "subscription") считаются в общей пачке с играми: обе
-     покупаются через баланс PS Store нужного региона, поэтому обе попадают
-     в один и тот же расчёт карт пополнения по стране (см. calcCardsForAmount
-     ниже) — итоговая цена подписки в корзине тоже определяется картами. */
-  const gameItems = withIdx.filter(g=> g.type === "game" || g.type === "subscription");
-  const extraItems = withIdx.filter(g=> g.type !== "game" && g.type !== "subscription");
-  const presentCountries = ["IN","TR"].filter(code=> gameItems.some(g=> g.country === code));
-  const multiCountry = presentCountries.length > 1;
-  const countryIcon = {IN:"🇮🇳", TR:"🇹🇷"};
-
-  let grandTotal = 0;
-  let html = "";
-
-  const productRow = g => `
-    <div class="cx-product">
-      <div class="cx-product-cover" style="background:${g.img ? `url('${g.img}') center/cover no-repeat` : g.grad};"></div>
-      <div class="cx-product-info">
-        <div class="cx-product-name">${g.name}</div>
-        <div class="cx-product-meta">${g.metaLine || ""}</div>
-      </div>
-      <div class="cx-product-right">
-        <div class="cx-product-price">${g.price}${g.qty > 1 ? `<span class="cx-product-qty">× ${g.qty}</span>` : ""}</div>
-        <button class="cx-remove-btn" data-remove="${g.idx}" aria-label="Убрать из корзины">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-        </button>
-      </div>
-    </div>`;
-
-  presentCountries.forEach(code=>{
-    const countryName = countryNames[code];
-    const unit = nativeUnitLabel[code];
-    const rate = getCountryRate(code);
-    const itemsForCountry = gameItems.filter(g=> g.country === code);
-    itemsForCountry.forEach(it=> {
-      it.nativeUnitAmount = (typeof it.nativePrice === "number") ? it.nativePrice : Math.round(it.priceNum / rate);
-      it.metaLine = `Цена в PS Store ${formatPrice(it.nativeUnitAmount)} ${unit}`;
-    });
-    const totalNative = itemsForCountry.reduce((s,it)=> s + it.nativeUnitAmount*it.qty, 0);
-    const {picks, totalAmount, totalCost, leftover} = calcCardsForAmount(code, totalNative);
-    grandTotal += totalCost;
-
-    const minDenom = Math.min(...getPsCountryCatalog(code).items.map(it=> parseAmountNumber(it.amount)));
-
-    html += `<div class="cx-group">
-      <div class="cx-group-head">
-        <div class="cx-group-icon" style="${countryGroupImg[code] ? `background:url('${countryGroupImg[code]}') center/cover no-repeat;` : ""}">${countryGroupImg[code] ? "" : (countryIcon[code] || "🎮")}</div>
-        <div class="cx-group-head-text">
-          <div class="cx-group-title">PS Store ${multiCountry ? countryName : ""}</div>
-          <div class="cx-group-sub">${formatPrice(totalCost)} ₽ · карты пополнения баланса</div>
-        </div>
-      </div>
-      <div class="cx-note">Лучший набор карт для оплаты выбранного — номиналов ниже ${formatPrice(minDenom)} ${unit} нет.</div>
-      ${picks.map(p=>{
-        const badgeImg = p.item.img || giftCatalogs.psstore.img;
-        return `
-        <div class="cx-denomrow">
-          <div class="cx-denom-badge" style="background:url('${badgeImg}') center/cover no-repeat;"></div>
-          <div class="cx-denom-text">Номинал ${formatPrice(p.amount)} ${unit} × ${p.qty}</div>
-          <div class="cx-denom-price">${formatPrice(p.price*p.qty)} ₽</div>
-        </div>`;
-      }).join("")}
-      <div class="cx-confirm">
-        <div class="cx-confirm-tick">✓</div>
-        <div>Карт на ${formatPrice(totalAmount)} ${unit} хватит на все товары ниже.${leftover>0 ? ` Остаток ${formatPrice(leftover)} ${unit} останется на аккаунте.` : ""}</div>
-      </div>
-      ${itemsForCountry.map(productRow).join("")}
-    </div>`;
-  });
-
-  if(extraItems.length){
-    html += `<div class="cx-group">
-      <div class="cx-group-head">
-        <div class="cx-group-icon">🎁</div>
-        <div class="cx-group-head-text">
-          <div class="cx-group-title">Подписки и пополнения</div>
-          <div class="cx-group-sub">Оплачиваются напрямую</div>
-        </div>
-      </div>
-      ${extraItems.map(g=> {
-        grandTotal += priceToNumber(g.price) * g.qty;
-        return productRow(g);
-      }).join("")}
-    </div>`;
-  }
-
-  container.innerHTML = html;
-
-  container.querySelectorAll("[data-remove]").forEach(el=>{
-    el.addEventListener("click",(e)=>{ e.stopPropagation(); removeFromCart(parseInt(el.dataset.remove,10)); });
-  });
-
-  const oldPriceDiscount = withIdx.reduce((s,g)=> s + (g.oldNum ? (g.oldNum - g.priceNum) * g.qty : 0), 0);
-
-  const discountAmount = cartPromo.discountPercent ? Math.round(grandTotal * cartPromo.discountPercent / 100) : 0;
-  const finalTotal = grandTotal - discountAmount;
-  cartFinalTotal = finalTotal;
-
-  /* Способ оплаты выбирается прямо здесь, в корзине (как и на странице
-     "оплата сразу"), поэтому итоговая сумма чека сразу пересчитывается под
-     выбранный способ — картой дороже на комиссию эквайринга, криптой дешевле. */
-  const cardTotal = getCardPrice(finalTotal);
-  const cryptoTotal = getCryptoPrice(finalTotal);
-  const payTotal = cartPayMethod === "card" ? cardTotal : (cartPayMethod === "crypto" ? cryptoTotal : finalTotal);
-
-  document.querySelectorAll("#cart-pay-methods .pay-method").forEach(el=>{
-    el.classList.toggle("selected", el.dataset.pay === cartPayMethod);
-  });
-
-  if(cartPromo.code){
-    promoToggle.style.display = "none";
-    promoPanel.style.display = "none";
-    promoApplied.style.display = "flex";
-    document.getElementById("cx-promo-code-label").textContent = `${cartPromo.code} (−${cartPromo.discountPercent}%)`;
-  } else {
-    promoToggle.style.display = "flex";
-    promoApplied.style.display = "none";
-  }
-
-  const goodsOldTotal = grandTotal + oldPriceDiscount;
-
-  receipt.innerHTML = `<div class="cx-receipt-row"><span>Товары (${totalCount})</span><span>${formatPrice(goodsOldTotal)} ₽</span></div>
-    ${oldPriceDiscount>0 ? `<div class="cx-receipt-row" style="color:var(--green);"><span>Скидка</span><span>−${formatPrice(oldPriceDiscount)} ₽</span></div>` : ""}
-    ${discountAmount>0 ? `<div class="cx-receipt-row" style="color:var(--green);"><span>Промокод ${cartPromo.code}</span><span>−${formatPrice(discountAmount)} ₽</span></div>` : ""}
-    <div class="cx-receipt-dash"></div>
-    <div class="cx-receipt-total"><span>Итого к оплате</span><b>${formatPrice(payTotal)} ₽</b></div>`;
-
-  checkoutCard.style.display = "block";
-  buyBar.style.display = "block";
-  syncCartBuyMode(currentView);
-}
-
-/* ---------- Cart checkout: promo code ---------- */
-document.getElementById("cart-promo-input").addEventListener("input", ()=>{
-  setPromoError("cart", false);
-  document.getElementById("cart-promo-success").classList.remove("show");
-});
-
-document.getElementById("cart-promo-apply-btn").addEventListener("click", ()=>{
-  const raw = document.getElementById("cart-promo-input").value.trim();
-  const code = raw.toUpperCase();
-
-  if(!code){
-    cartPromo = {code:"", discountPercent:0};
-    setPromoError("cart", true, "Введите промокод");
-    renderCart();
-    return;
-  }
-
-  if(cartPromoCodes[code]){
-    cartPromo = {code, discountPercent: cartPromoCodes[code]};
-    renderCart();
-  } else {
-    cartPromo = {code:"", discountPercent:0};
-    setPromoError("cart", true, "Промокод недействителен");
-  }
-});
-
-document.getElementById("cx-promo-toggle").addEventListener("click", ()=>{
-  const toggle = document.getElementById("cx-promo-toggle");
-  const panel = document.getElementById("cx-promo-panel");
-  const willOpen = panel.style.display === "none";
-  panel.style.display = willOpen ? "block" : "none";
-  toggle.classList.toggle("open", willOpen);
-  if(willOpen) setTimeout(()=> document.getElementById("cart-promo-input").focus(), 50);
-});
-
-document.getElementById("cx-promo-remove").addEventListener("click", ()=>{
-  cartPromo = {code:"", discountPercent:0};
-  document.getElementById("cart-promo-input").value = "";
-  setPromoError("cart", false);
-  document.getElementById("cart-promo-success").classList.remove("show");
-  renderCart();
-});
-
-/* ---------- Cart checkout: email + agreement ---------- */
-/* The agreement checkbox is always on and cannot be unchecked. */
-function setCartEmailError(show){
-  document.getElementById("cart-email-input").classList.toggle("error", show);
-  document.getElementById("cart-email-error").classList.toggle("show", show);
-}
-
-document.getElementById("cart-email-input").addEventListener("input", ()=>{
-  if(document.getElementById("cart-email-input").value.trim() !== ""){
-    setCartEmailError(false);
-  }
-});
-
-/* ---------- Cart checkout: способ оплаты (прямо в корзине, как и на
-   странице "оплата сразу" — без перехода на отдельную страницу) ---------- */
-let cartPayMethod = "sbp";
-
-/* Цена корзины в cartFinalTotal — это цена по СБП (как и на странице
-   "оплата сразу"). Оплата картой дороже на 3% комиссии эквайринга (getCardPrice),
-   оплата криптой дешевле цены по СБП на 2% (getCryptoPrice). */
-function getCartPayTotal(){
-  const sbpTotal = cartFinalTotal || 0;
-  if(cartPayMethod === "card") return getCardPrice(sbpTotal);
-  if(cartPayMethod === "crypto") return getCryptoPrice(sbpTotal);
-  return sbpTotal;
-}
-
-document.querySelectorAll("#cart-pay-methods .pay-method").forEach(el=>{
-  el.addEventListener("click", ()=>{
-    document.querySelectorAll("#cart-pay-methods .pay-method").forEach(x=>x.classList.remove("selected"));
-    el.classList.add("selected");
-    cartPayMethod = el.dataset.pay;
-    renderCart();
-  });
-});
-
-document.getElementById("cart-buy-btn").addEventListener("click", ()=>{
-  const email = document.getElementById("cart-email-input").value.trim();
-  const emailValid = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  if(!emailValid){
-    setCartEmailError(true);
-    document.getElementById("cart-email-input").scrollIntoView({block:"center", behavior:"smooth"});
-    return;
-  }
-  setCartEmailError(false);
-
-  /* Тот же расчёт "какими картами пополнения оплачивается покупка", что и
-     в renderCart (группировка по стране + calcCardsForAmount). Позиция в
-     заказе остаётся просто игрой — но из неё выпадает весь список карт,
-     которыми она оплачена, с номиналом каждой. Если в одной стране куплено
-     несколько игр сразу, карты (общие на всю группу) прикрепляются к
-     последней игре группы, чтобы коды отображались одним блоком внизу
-     под всеми играми группы, а не дублировались под каждой. */
-  const withIdx = cart.map((c, idx)=> ({...c, idx}));
-  const gameItems = withIdx.filter(g=> g.type === "game" || g.type === "subscription");
-  const extraItems = withIdx.filter(g=> g.type !== "game" && g.type !== "subscription");
-  const presentCountries = ["IN","TR"].filter(code=> gameItems.some(g=> g.country === code));
-
-  const orderItems = [];
-
-  presentCountries.forEach(code=>{
-    const rate = getCountryRate(code);
-    const itemsForCountry = gameItems.filter(g=> g.country === code);
-    const totalNative = itemsForCountry.reduce((s,it)=>{
-      const nativeUnitAmount = (typeof it.nativePrice === "number") ? it.nativePrice : Math.round(it.priceNum / rate);
-      return s + nativeUnitAmount * it.qty;
-    }, 0);
-    const {picks} = calcCardsForAmount(code, totalNative);
-    const cardCodes = buildCountryCardCodes(code, picks);
-
-    itemsForCountry.forEach((it, i)=>{
-      const isLast = i === itemsForCountry.length - 1;
-      if(isLast){
-        orderItems.push({name:it.name, price:it.price, qty:it.qty, img:it.img, grad:it.grad, presetCodes: cardCodes});
-      } else {
-        orderItems.push({name:it.name, price:it.price, qty:it.qty, img:it.img, grad:it.grad, needsCode:false});
-      }
-    });
-  });
-
-  extraItems.forEach(it=>{
-    orderItems.push({name:it.name, price:it.price, qty:it.qty, img:it.img, grad:it.grad});
-  });
-
-  createOrder(
-    orderItems,
-    `${formatPrice(getCartPayTotal())} ₽`,
-    email
-  );
-
-  cart = [];
-  cartPromo = {code:"", discountPercent:0};
-  cartPayMethod = "sbp";
-  renderCart();
-
-});
-
-/* Строит список выпадающих карт пополнения под игрой: по одному коду на
-   каждую физическую карту из picks, с подписью её номинала — это именно
-   то, что показывалось в корзине как "Номинал X ₺/₹ × N". */
-function buildCountryCardCodes(country, picks){
-  const unit = nativeUnitLabel[country];
-  const list = [];
-  picks.forEach(p=>{
-    for(let i=0;i<p.qty;i++){
-      list.push({code: generatePurchaseCode(), label: `Номинал ${formatPrice(p.amount)} ${unit}`});
-    }
-  });
-  return list;
-}
-
-let cartAddToastTimer = null;
-function flashAdded(item){
-  const toast = document.getElementById("cart-add-toast");
-  const thumb = document.getElementById("cart-add-thumb");
-  const nameEl = document.getElementById("cart-add-name");
-
-  const name = typeof item === "string" ? item : item.name;
-  const img = typeof item === "object" ? item.img : null;
-  const grad = typeof item === "object" ? item.grad : null;
-
-  thumb.style.background = img ? `url('${img}') center/cover no-repeat` : (grad || "var(--accent-grad)");
-  nameEl.textContent = name;
-
-  clearTimeout(cartAddToastTimer);
-  toast.classList.remove("show");
-  void toast.offsetWidth; // restart animation if triggered again quickly
-  toast.classList.add("show");
-
-  const badge = document.querySelector('.navitem[data-view="cart"] .nav-badge');
-  badge.classList.remove("bump");
-  void badge.offsetWidth;
-  badge.classList.add("bump");
-
-  cartAddToastTimer = setTimeout(()=> toast.classList.remove("show"), 1100);
-}
-
-document.getElementById("cart-add-card").addEventListener("click", ()=>{
-  clearTimeout(cartAddToastTimer);
-  document.getElementById("cart-add-toast").classList.remove("show");
-  goToCart();
-});
-
 function showToast(text){
   const el = document.createElement("div");
   el.textContent = text;
@@ -1041,277 +477,6 @@ function showToast(text){
   document.body.appendChild(el);
   setTimeout(()=> el.remove(), 1600);
 }
-
-/* Клик по карточкам bestsellers/newreleases теперь навешивается в самом
-   конце скрипта — там же, где эти карточки отрисовываются (см. ниже). */
-
-/* ---------- Product detail (game) ---------- */
-const gameDescriptions = [
-  "Погрузитесь в захватывающий мир игры с проработанным сюжетом, динамичным геймплеем и потрясающей графикой. Издание включает базовую игру и все объявленные дополнения.",
-  "Одна из самых ожидаемых игр года. Исследуйте огромный открытый мир, выполняйте сюжетные задания и прокачивайте своего персонажа.",
-  "Легендарная серия продолжается. Новая часть предлагает переработанный движок, улучшенную боевую систему и множество новых локаций.",
-];
-
-/* To limit a specific game to only certain account regions, add a `countries` array
-   to that game in the `games` list above, e.g.:
-   countries: ["IN"]
-   Omit it entirely to keep the game available for every region in gameCountryCodes. */
-function getGameCountries(g){
-  return (g.countries && g.countries.length) ? g.countries : gameCountryCodes;
-}
-
-/* Edition tiers. Default multipliers are applied on top of each game's base price/old
-   so every game gets Standard/Deluxe/Premium out of the box. To set a specific game's
-   real prices per edition later, just add an `editions` object to that game in the
-   `games` list above, e.g.:
-   editions: { standard:{price:2990, old:null}, deluxe:{price:3990, old:null}, premium:{price:4990, old:null} }
-   Any edition you omit from that object simply won't be offered for that game -
-   e.g. editions: { standard:{price:2990, old:null} } makes the game Standard-only.
-   The keys don't have to be standard/deluxe/premium — you can use any name you want,
-   e.g. editions: { gold:{price:2990, old:null, label:"Gold"}, ultimate:{price:4990, old:null, label:"Ultimate"} }
-   The `label` is what's shown to the user; without it, standard/deluxe/premium fall
-   back to their default Russian-friendly names and any other key is shown as-is
-   (capitalized). Object key order = the order the tabs are shown in. */
-const editionMultiplier = {standard:1, deluxe:1.25, premium:1.6};
-
-function getGameEditions(g){
-  if(g.editions) return g.editions;
-  const basePrice = priceToNumber(g.price);
-  const baseOld = g.old ? priceToNumber(g.old) : null;
-  const result = {};
-  editionOrder.forEach(key=>{
-    const mult = editionMultiplier[key];
-    result[key] = {
-      price: Math.round(basePrice * mult),
-      old: baseOld ? Math.round(baseOld * mult) : null
-    };
-  });
-  return result;
-}
-
-/* Which edition keys to actually offer for this game, in display order. If the game
-   has a custom `editions` object, its own keys are used verbatim (any names, any
-   order) — not filtered against the default standard/deluxe/premium list. */
-function getEditionKeys(g){
-  const editions = getGameEditions(g);
-  return Object.keys(editions).filter(k=>editions[k]);
-}
-
-/* Display name for a given edition tier: uses the game's own `label` override
-   if it set one, otherwise falls back to the default Standard/Deluxe/Premium name,
-   otherwise shows the raw key capitalized. */
-function getEditionLabel(g, key){
-  const editions = getGameEditions(g);
-  if(editions[key] && editions[key].label) return editions[key].label;
-  if(editionLabels[key]) return editionLabels[key];
-  return key.charAt(0).toUpperCase() + key.slice(1);
-}
-
-function renderProductDescription(g, listKey, idx){
-  document.getElementById("product-desc").textContent = gameDescriptions[idx % gameDescriptions.length];
-}
-
-let productDetailState = {listKey:null, idx:null, country:"IN", edition:"standard"};
-
-function openProduct(listKey, idx){
-  const g = games[listKey][idx];
-  const favId = `game:${listKey}:${idx}`;
-  const defaultEdition = getEditionKeys(g)[0] || "standard";
-  const defaultCountry = getGameCountries(g)[0];
-  productDetailState = {listKey, idx, country:defaultCountry, edition:defaultEdition};
-
-  document.getElementById("product-topbar-title").textContent = g.name;
-  const cover = document.getElementById("product-cover");
-  cover.style.background = g.img ? `url('${g.img}') center/cover no-repeat` : g.grad;
-  cover.innerHTML = "";
-  document.getElementById("product-name").textContent = g.name;
-  const heartSlot = document.getElementById("product-heart-slot");
-  heartSlot.innerHTML = heartHTML(favId, "inline");
-  bindHearts(heartSlot);
-  renderProductDescription(g, listKey, idx);
-
-  renderProductEditionTabs();
-  renderProductCountryTabs();
-  updateProductPrice();
-
-  showSubView("view-product");
-}
-
-function renderProductEditionTabs(){
-  const g = games[productDetailState.listKey][productDetailState.idx];
-  const keys = getEditionKeys(g);
-  const wrap = document.getElementById("product-edition-tabs");
-  wrap.innerHTML = keys.map(k=>`<div class="pill ${k===productDetailState.edition ? "active" : ""}" data-edition="${k}">${getEditionLabel(g,k)}</div>`).join("");
-  wrap.querySelectorAll(".pill").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      productDetailState.edition = el.dataset.edition;
-      renderProductEditionTabs();
-      updateProductPrice();
-    });
-  });
-}
-
-function renderProductCountryTabs(){
-  const g = games[productDetailState.listKey][productDetailState.idx];
-  const codes = getGameCountries(g);
-  const wrap = document.getElementById("product-country-tabs");
-  wrap.innerHTML = codes.map(c=>`<div class="pill ${c===productDetailState.country ? "active" : ""}" data-country="${c}">${countryNames[c]}</div>`).join("");
-  wrap.querySelectorAll(".pill").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      productDetailState.country = el.dataset.country;
-      renderProductCountryTabs();
-      updateProductPrice();
-    });
-  });
-}
-
-/* Цена берётся из `editions.price` / `editions.old` (или из авто-рассчитанных тиров
-   Standard/Deluxe/Premium, если у игры нет своих `editions`) и показывается как есть,
-   одинаково для всех стран — ЕСЛИ вы не зададите цену отдельно для страны.
-
-   Чтобы у конкретного издания была своя цена в конкретной стране, добавьте в тир
-   издания поле `byCountry` с кодом страны в качестве ключа:
-
-   editions: {
-     standard: {
-       price: 2690, old: 5990,           // цена по умолчанию (для стран, для которых нет byCountry)
-       byCountry: {
-         IN: { price: 1990, old: 4490 }, // своя цена для Индии
-         TR: { price: 2290, old: 4990 }  // своя цена для Турции
-       }
-     },
-     ultimate: { price: 3890, old: 6490 } // у этого издания цена одна для всех стран
-   }
-
-   Страну для товара не нужно указывать отдельно в byCountry — достаточно, чтобы
-   код страны совпадал с одним из кодов в `gameCountryCodes` / `countries` игры.
-
-   ЦЕНА В PS STORE (Rs / ₺) — от неё в корзине считается, какие карты пополнения
-   нужны покупателю. По умолчанию она пересчитывается автоматически из цены в ₽
-   по курсу карт из каталога PS Store — но курс PS Store меняется, а ваша цена в ₽
-   не обязана двигаться синхронно с ним. Поэтому лучше задавать её вручную: добавьте
-   в тир издания (или в его `byCountry`) поле `native` с ценой в местной валюте:
-
-   editions: {
-     standard: {
-       price: 2690, old: 5990,
-       native: { IN: 7499 },             // цена в PS Store Индии, в Rs
-       byCountry: {
-         IN: { price: 1990, old: 4490, native: 7499 }, // если для страны своя ₽-цена — native тоже сюда
-         TR: { price: 2290, old: 4990, native: 2999 }  // цена в PS Store Турции, в ₺
-       }
-     }
-   }
-
-   Если `native` не указана для страны — сумма для карт будет по-прежнему считаться
-   автоматически из ₽-цены (как раньше), так что ничего не сломается, если вы
-   заполните native только для части игр.
-
-   ВАЖНО: если `native` задана, поле `price`/`byCountry.price` в рублях для этой
-   страны использовать не для показа цены — реальная цена, которая показывается
-   и на главной, и на странице товара, и попадает в корзину, теперь считается
-   ОТ native: это стоимость карт пополнения, которые реально понадобятся, чтобы
-   набрать нужную сумму в Rs/₺ (см. calcCardsForAmount). Так цена на витрине
-   всегда совпадает с тем, что покупатель увидит в корзине. Поле `price` при
-   этом используется только как запасной вариант для стран без `native`. */
-function getProductPricing(g, edition, country){
-  const editions = getGameEditions(g);
-  const tier = editions[edition] || editions[Object.keys(editions)[0]];
-  const override = tier.byCountry && tier.byCountry[country];
-  const source = override || tier;
-  const old = source.old ? `${formatPrice(source.old)} ₽` : null;
-  const nativeOverride = (override && typeof override.native === "number") ? override.native
-    : (tier.native && typeof tier.native[country] === "number") ? tier.native[country]
-    : null;
-
-  if(nativeOverride != null){
-    // Реальная цена = стоимость карт пополнения, которые понадобятся на эту сумму.
-    const realCost = calcCardsForAmount(country, nativeOverride).totalCost;
-    return {
-      price: `${formatPrice(realCost)} ₽`,
-      old,
-      priceNum: realCost,
-      oldNum: source.old || null,
-      nativePrice: nativeOverride
-    };
-  }
-
-  const price = `${formatPrice(source.price)} ₽`;
-  return {price, old, priceNum: source.price, oldNum: source.old || null, nativePrice: null};
-}
-
-/* Самая дешёвая цена по игре — перебирает все издания и все доступные страны
-   (с учётом byCountry/native-переопределений) и возвращает пейлоад
-   getProductPricing с наименьшим priceNum. Используется для карточек на
-   главной (Хиты продаж/Предзаказ/Новинки), чтобы там сразу было видно
-   минимальную цену за игру, а не цену первого попавшегося издания/страны. */
-function getCheapestPricing(g){
-  const editionKeys = getEditionKeys(g);
-  const countries = getGameCountries(g);
-  let best = null;
-  editionKeys.forEach(ed=>{
-    countries.forEach(c=>{
-      const pricing = getProductPricing(g, ed, c);
-      if(!best || pricing.priceNum < best.priceNum) best = pricing;
-    });
-  });
-  return best;
-}
-
-function updateProductPrice(){
-  const g = games[productDetailState.listKey][productDetailState.idx];
-  const {price, old} = getProductPricing(g, productDetailState.edition, productDetailState.country);
-
-  document.getElementById("product-price").textContent = price;
-  document.getElementById("product-old").textContent = old || "";
-  document.getElementById("product-old").style.display = old ? "block" : "none";
-
-  updateProductBuyState();
-}
-
-function updateProductBuyState(){
-  const g = games[productDetailState.listKey][productDetailState.idx];
-  const countryName = countryNames[productDetailState.country];
-  const editionLabel = getEditionLabel(g, productDetailState.edition);
-  const {price, priceNum, oldNum, nativePrice} = getProductPricing(g, productDetailState.edition, productDetailState.country);
-  const name = `${g.name} (${editionLabel}, ${countryName})`;
-
-  const buyBtn = document.getElementById("product-buy-btn");
-  if(isInCart(name)){
-    buyBtn.classList.add("buy-btn-added");
-    buyBtn.style.background = "var(--green)";
-    buyBtn.textContent = "Мои покупки";
-    buyBtn.onclick = ()=> goToCart();
-  } else {
-    buyBtn.classList.remove("buy-btn-added");
-    buyBtn.style.background = "";
-    buyBtn.textContent = "Купить";
-    buyBtn.onclick = ()=>{
-      addToCart({
-        name,
-        edition: `${editionLabel} · ${countryName}`,
-        price,
-        grad: g.grad,
-        img: g.img || null,
-        type: "game",
-        country: productDetailState.country,
-        priceNum,
-        oldNum,
-        nativePrice
-      });
-      updateProductBuyState();
-    };
-  }
-}
-
-function goToCart(){
-  clearTimeout(cartAddToastTimer);
-  document.getElementById("cart-add-toast").classList.remove("show");
-  showSubView("view-cart");
-}
-
-document.getElementById("product-back").addEventListener("click", ()=> goBack());
-document.getElementById("cart-back").addEventListener("click", ()=> goBack());
 
 /* ---------- Top-up (donate) ----------
    Чтобы добавить фото товара:
@@ -1750,7 +915,6 @@ function openTopup(key){
     modeTabs.style.display = s.codesCatalog ? "flex" : "none";
   }
 
-  document.getElementById("topup-topbar-title").textContent = s.name;
   document.getElementById("topup-heading").textContent = s.name;
 
   // Логотип сервиса: фото, если задано, иначе градиент + эмодзи-иконка
@@ -2066,7 +1230,6 @@ document.getElementById("topup-custom-buy-btn").addEventListener("click", ()=>{
 
 });
 
-document.getElementById("topup-back").addEventListener("click", ()=> goBack());
 
 /* Support row is a real <a href="https://t.me/metracodehelp"> — no JS needed */
 
@@ -2109,7 +1272,6 @@ document.getElementById("pkg-info-overlay").addEventListener("click", (e)=>{
 function openPaymentPage(config){
   paymentConfig = config;
   const hint=document.getElementById("payment-email-hint"); if(hint) hint.textContent=(config.showId||config.showUsername)?"Ваш аккаунт пополнится в течение 5 минут.":"Код придет Вам прямо в чат и в раздел «Мои покупки» в течение 5 минут.";
-  document.getElementById("payment-topbar-title").textContent = config.title;
   document.getElementById("payment-heading").textContent = config.heading || config.title;
   document.getElementById("payment-item-icon").style.background = config.itemImg
     ? `url('${config.itemImg}') center/cover no-repeat`
@@ -2227,16 +1389,6 @@ function openPaymentPage(config){
   paymentPayMethod = "sbp";
   document.querySelectorAll("#payment-pay-methods .pay-method").forEach((el,i)=> el.classList.toggle("selected", i===0));
 
-  paymentPromo = {code:"", discountPercent:0};
-  document.getElementById("payment-promo-input").value = "";
-  setPromoError("payment", false);
-  document.getElementById("payment-promo-success").classList.remove("show");
-  document.getElementById("payment-discount-row").style.display = "none";
-  document.getElementById("payment-promo-toggle").style.display = "flex";
-  document.getElementById("payment-promo-toggle").classList.remove("open");
-  document.getElementById("payment-promo-panel").style.display = "none";
-  document.getElementById("payment-promo-applied").style.display = "none";
-
   updatePaymentTotals();
 
   updatePaymentBuyButton();
@@ -2284,9 +1436,6 @@ document.getElementById("payment-qty-dec").addEventListener("click", ()=>{
   updatePaymentTotals();
 });
 
-/* ---------- Payment page: promo code ---------- */
-let paymentPromo = {code:"", discountPercent:0};
-
 /* Способ оплаты на странице "оплата сразу" (view-payment). По умолчанию СБП. */
 let paymentPayMethod = "sbp";
 
@@ -2302,22 +1451,25 @@ function getCryptoPrice(sbpPrice){
   return Math.floor(sbpPrice * 0.98);
 }
 
+function getPaymentUnitPrice(){
+  const unitSbp = paymentConfig.itemPrice;
+  if(paymentPayMethod === "card") return getCardPrice(unitSbp);
+  if(paymentPayMethod === "crypto") return getCryptoPrice(unitSbp);
+  return unitSbp;
+}
+
 function updatePaymentTotals(){
   if(!paymentConfig) return;
   const qty = paymentConfig.showQty ? paymentQty : 1;
 
-  const unitSbp = paymentConfig.itemPrice;
-  const unitCard = getCardPrice(unitSbp);
-  const unitCrypto = getCryptoPrice(unitSbp);
-  const unitBase = paymentPayMethod === "card" ? unitCard : (paymentPayMethod === "crypto" ? unitCrypto : unitSbp);
+  const unitCard = getCardPrice(paymentConfig.itemPrice);
+  const unitBase = getPaymentUnitPrice();
 
   const base = unitBase * qty;
   const baseOld = (paymentConfig.itemOld || paymentConfig.itemPrice) * qty;
   const methodDiscountAmount = paymentPayMethod !== "card" ? (unitCard - unitBase) * qty : 0;
 
-  const promoBase = base;
-  const discountAmount = paymentPromo.discountPercent ? Math.round(promoBase * paymentPromo.discountPercent / 100) : 0;
-  const total = base - discountAmount;
+  const total = base;
 
   document.getElementById("payment-item-price").textContent = `${formatPrice(unitBase)} ₽`;
   document.getElementById("payment-sum").textContent = `${formatPrice(baseOld)} ₽`;
@@ -2333,65 +1485,8 @@ function updatePaymentTotals(){
     oldDiscountRow.style.display = "none";
   }
 
-  const discountRow = document.getElementById("payment-discount-row");
-  if(discountAmount > 0){
-    discountRow.style.display = "flex";
-    document.getElementById("payment-discount-label").textContent = `Промокод ${paymentPromo.code} (−${paymentPromo.discountPercent}%)`;
-    document.getElementById("payment-discount-amount").textContent = `−${formatPrice(discountAmount)} ₽`;
-  } else {
-    discountRow.style.display = "none";
-  }
   document.getElementById("payment-total").textContent = `${formatPrice(total)} ₽`;
 }
-
-document.getElementById("payment-promo-input").addEventListener("input", ()=>{
-  setPromoError("payment", false);
-  document.getElementById("payment-promo-success").classList.remove("show");
-});
-
-document.getElementById("payment-promo-apply-btn").addEventListener("click", ()=>{
-  const raw = document.getElementById("payment-promo-input").value.trim();
-  const code = raw.toUpperCase();
-
-  if(!code){
-    paymentPromo = {code:"", discountPercent:0};
-    setPromoError("payment", true, "Введите промокод");
-    updatePaymentTotals();
-    return;
-  }
-
-  if(cartPromoCodes[code]){
-    paymentPromo = {code, discountPercent: cartPromoCodes[code]};
-    setPromoSuccess("payment", `Промокод применён: скидка ${cartPromoCodes[code]}%`);
-    document.getElementById("payment-promo-toggle").style.display = "none";
-    document.getElementById("payment-promo-panel").style.display = "none";
-    document.getElementById("payment-promo-applied").style.display = "flex";
-    document.getElementById("payment-promo-code-label").textContent = `${code} (−${cartPromoCodes[code]}%)`;
-  } else {
-    paymentPromo = {code:"", discountPercent:0};
-    setPromoError("payment", true, "Промокод недействителен");
-  }
-  updatePaymentTotals();
-});
-
-document.getElementById("payment-promo-toggle").addEventListener("click", ()=>{
-  const toggle = document.getElementById("payment-promo-toggle");
-  const panel = document.getElementById("payment-promo-panel");
-  const willOpen = panel.style.display === "none";
-  panel.style.display = willOpen ? "block" : "none";
-  toggle.classList.toggle("open", willOpen);
-  if(willOpen) setTimeout(()=> document.getElementById("payment-promo-input").focus(), 50);
-});
-
-document.getElementById("payment-promo-remove").addEventListener("click", ()=>{
-  paymentPromo = {code:"", discountPercent:0};
-  document.getElementById("payment-promo-input").value = "";
-  setPromoError("payment", false);
-  document.getElementById("payment-promo-success").classList.remove("show");
-  document.getElementById("payment-promo-toggle").style.display = "flex";
-  document.getElementById("payment-promo-applied").style.display = "none";
-  updatePaymentTotals();
-});
 
 function updatePaymentBuyButton(){
   const payBtn = document.getElementById("payment-buy-btn");
@@ -2496,14 +1591,11 @@ document.getElementById("payment-buy-btn").addEventListener("click", ()=>{
 
   if(paymentConfig.onConfirm){
     const qty = paymentConfig.showQty ? paymentQty : 1;
-    const base = paymentConfig.itemPrice * qty;
-    const discountAmount = paymentPromo.discountPercent ? Math.round(base * paymentPromo.discountPercent / 100) : 0;
-    const finalPrice = base - discountAmount;
-    paymentConfig.onConfirm(finalPrice, emailVal, qty);
+    // Сумма заказа = сумма, показанная покупателю для выбранного способа оплаты.
+    paymentConfig.onConfirm(getPaymentUnitPrice() * qty, emailVal, qty);
   }
 });
 
-document.getElementById("payment-back").addEventListener("click", ()=> goBack());
 
 
 /* Синхронизируем иконки и % скидки сервисов в списке "Сервисы пополнения"
@@ -2549,7 +1641,6 @@ function updateGiftcardLabel(){
 
 function openGiftCards(key){
   const cat = giftCatalogs[key];
-  document.getElementById("giftcards-topbar-title").textContent = cat.title;
 
   // Карточка с логотипом/названием/описанием сервиса — как у игрового доната.
   // Для Telegram (Stars/Premium) не показываем: там свой отдельный флоу без общего бренд-блока.
@@ -2622,15 +1713,12 @@ function renderGiftGrid(){
   const labelEl = document.getElementById("giftcard-pkg-label");
   const starsWrap = document.getElementById("tg-stars-buy");
   const premWrap = document.getElementById("tg-prem-buy");
-  const titleEl = document.getElementById("giftcards-topbar-title");
 
   if(isTgStarsMode()){
     grid.style.display = "none";
     labelEl.style.display = "block";
     starsWrap.style.display = "block";
     premWrap.style.display = "none";
-    titleEl.textContent = "Купить звёзды";
-    resetTgStarsPromo();
     renderTgStarsBuy();
     return;
   }
@@ -2639,8 +1727,6 @@ function renderGiftGrid(){
     labelEl.style.display = "block";
     starsWrap.style.display = "none";
     premWrap.style.display = "block";
-    titleEl.textContent = "Telegram Premium";
-    resetTgPremPromo();
     renderTgPremBuy();
     return;
   }
@@ -2648,7 +1734,6 @@ function renderGiftGrid(){
   labelEl.style.display = "block";
   starsWrap.style.display = "none";
   premWrap.style.display = "none";
-  titleEl.textContent = cat.title;
 
   const items = getCurrentGiftItems();
   grid.innerHTML = items.map((item, idx) => {
@@ -2762,26 +1847,13 @@ function renderTgStarsBuy(){
   updateTgStarsTotals();
 }
 
-/* ---------- Telegram Stars: promo code (тот же список кодов, что и в
-   корзине/на общей странице оплаты — см. cartPromoCodes) ---------- */
-let tgStarsPromo = {code:"", discountPercent:0};
-
-function resetTgStarsPromo(){
-  tgStarsPromo = {code:"", discountPercent:0};
-  document.getElementById("tgstars-promo-input").value = "";
-  setPromoError("tgstars", false);
-  document.getElementById("tgstars-promo-success").classList.remove("show");
-}
-
 function getTgStarsFinalPrice(){
   const item = getTgStarsItems()[tgStarsSelectedIdx];
-  const base = item.price;
-  const discountAmount = tgStarsPromo.discountPercent ? Math.round(base * tgStarsPromo.discountPercent / 100) : 0;
-  return {base, discountAmount, total: base - discountAmount};
+  return {base: item.price, total: item.price};
 }
 
 function updateTgStarsTotals(){
-  const {base, discountAmount, total} = getTgStarsFinalPrice();
+  const {base, total} = getTgStarsFinalPrice();
   const item = getTgStarsItems()[tgStarsSelectedIdx];
   document.getElementById("tgstars-sum").textContent = `${formatPrice(item.old || base)} ₽`;
   const oldDiscountRow = document.getElementById("tgstars-old-discount-row");
@@ -2791,42 +1863,8 @@ function updateTgStarsTotals(){
   } else {
     oldDiscountRow.style.display = "none";
   }
-  const discountRow = document.getElementById("tgstars-discount-row");
-  if(discountAmount > 0){
-    discountRow.style.display = "flex";
-    document.getElementById("tgstars-discount-label").textContent = `Промокод ${tgStarsPromo.code} (−${tgStarsPromo.discountPercent}%)`;
-    document.getElementById("tgstars-discount-amount").textContent = `−${formatPrice(discountAmount)} ₽`;
-  } else {
-    discountRow.style.display = "none";
-  }
   document.getElementById("tgstars-total").textContent = `${formatPrice(total)} ₽`;
 }
-
-document.getElementById("tgstars-promo-input").addEventListener("input", ()=>{
-  setPromoError("tgstars", false);
-  document.getElementById("tgstars-promo-success").classList.remove("show");
-});
-
-document.getElementById("tgstars-promo-apply-btn").addEventListener("click", ()=>{
-  const raw = document.getElementById("tgstars-promo-input").value.trim();
-  const code = raw.toUpperCase();
-
-  if(!code){
-    tgStarsPromo = {code:"", discountPercent:0};
-    setPromoError("tgstars", true, "Введите промокод");
-    updateTgStarsTotals();
-    return;
-  }
-
-  if(cartPromoCodes[code]){
-    tgStarsPromo = {code, discountPercent: cartPromoCodes[code]};
-    setPromoSuccess("tgstars", `Промокод применён: скидка ${cartPromoCodes[code]}%`);
-  } else {
-    tgStarsPromo = {code:"", discountPercent:0};
-    setPromoError("tgstars", true, "Промокод недействителен");
-  }
-  updateTgStarsTotals();
-});
 
 document.getElementById("tgstars-username-input").addEventListener("input", ()=>{
   if(document.getElementById("tgstars-username-input").value.trim() !== ""){
@@ -2928,24 +1966,13 @@ function renderTgPremBuy(){
   updateTgPremTotals();
 }
 
-let tgPremPromo = {code:"", discountPercent:0};
-
-function resetTgPremPromo(){
-  tgPremPromo = {code:"", discountPercent:0};
-  document.getElementById("tgprem-promo-input").value = "";
-  setPromoError("tgprem", false);
-  document.getElementById("tgprem-promo-success").classList.remove("show");
-}
-
 function getTgPremFinalPrice(){
   const item = getTgPremItems()[tgPremSelectedIdx];
-  const base = item.price;
-  const discountAmount = tgPremPromo.discountPercent ? Math.round(base * tgPremPromo.discountPercent / 100) : 0;
-  return {base, discountAmount, total: base - discountAmount};
+  return {base: item.price, total: item.price};
 }
 
 function updateTgPremTotals(){
-  const {base, discountAmount, total} = getTgPremFinalPrice();
+  const {base, total} = getTgPremFinalPrice();
   const item = getTgPremItems()[tgPremSelectedIdx];
   document.getElementById("tgprem-sum").textContent = `${formatPrice(item.old || base)} ₽`;
   const oldDiscountRow = document.getElementById("tgprem-old-discount-row");
@@ -2955,42 +1982,8 @@ function updateTgPremTotals(){
   } else {
     oldDiscountRow.style.display = "none";
   }
-  const discountRow = document.getElementById("tgprem-discount-row");
-  if(discountAmount > 0){
-    discountRow.style.display = "flex";
-    document.getElementById("tgprem-discount-label").textContent = `Промокод ${tgPremPromo.code} (−${tgPremPromo.discountPercent}%)`;
-    document.getElementById("tgprem-discount-amount").textContent = `−${formatPrice(discountAmount)} ₽`;
-  } else {
-    discountRow.style.display = "none";
-  }
   document.getElementById("tgprem-total").textContent = `${formatPrice(total)} ₽`;
 }
-
-document.getElementById("tgprem-promo-input").addEventListener("input", ()=>{
-  setPromoError("tgprem", false);
-  document.getElementById("tgprem-promo-success").classList.remove("show");
-});
-
-document.getElementById("tgprem-promo-apply-btn").addEventListener("click", ()=>{
-  const raw = document.getElementById("tgprem-promo-input").value.trim();
-  const code = raw.toUpperCase();
-
-  if(!code){
-    tgPremPromo = {code:"", discountPercent:0};
-    setPromoError("tgprem", true, "Введите промокод");
-    updateTgPremTotals();
-    return;
-  }
-
-  if(cartPromoCodes[code]){
-    tgPremPromo = {code, discountPercent: cartPromoCodes[code]};
-    setPromoSuccess("tgprem", `Промокод применён: скидка ${cartPromoCodes[code]}%`);
-  } else {
-    tgPremPromo = {code:"", discountPercent:0};
-    setPromoError("tgprem", true, "Промокод недействителен");
-  }
-  updateTgPremTotals();
-});
 
 document.getElementById("tgprem-username-input").addEventListener("input", ()=>{
   if(document.getElementById("tgprem-username-input").value.trim() !== ""){
@@ -3038,7 +2031,6 @@ document.getElementById("tgother-crypto").addEventListener("click", ()=>{
 });
 document.getElementById("tgother-back").addEventListener("click", ()=> goBack());
 
-document.getElementById("giftcards-back").addEventListener("click", ()=> goBack());
 
 /* ---------- Пользовательское соглашение / Политика конфиденциальности ----------
    Открываются как обычные под-экраны через showSubView, поэтому goBack()
@@ -3135,15 +2127,6 @@ function syncCheckoutMode(id){
   document.getElementById("app").classList.toggle("checkout-mode", isCheckoutOnlyView(id));
 }
 
-/* На странице "Корзина", пока в ней есть товары, кнопка "Перейти к оплате"
-   занимает место нижней таб-бар панели — панель скрывается, а кнопка
-   становится сплошной полосой на всю ширину внизу экрана, как и на странице
-   оплаты (единый стиль для всех этих экранов). */
-function syncCartBuyMode(id){
-  const isCartWithItems = id === "view-cart" && cart.length > 0;
-  document.getElementById("app").classList.remove("cart-buy-mode");
-}
-
 /* На страницах "Пользовательское соглашение" и "Политика конфиденциальности"
    (открываются из корзины по ссылкам в согласии) нижняя таб-бар панель прячется —
    там нечего делать, кроме чтения документа. Кнопка "Назад" в шапке этих страниц
@@ -3163,9 +2146,7 @@ function showSubView(id){
   document.getElementById("scrollarea").scrollTop = 0;
   syncNavActiveTab(id);
   syncCheckoutMode(id);
-  syncCartBuyMode(id);
   syncLegalMode(id);
-  if(id === "view-product") updateProductBuyState();
   if(tgBack){ if(viewStack.length) tgBack.show(); else tgBack.hide(); }
 }
 
@@ -3177,9 +2158,7 @@ function goBack(){
   document.getElementById("scrollarea").scrollTop = 0;
   syncNavActiveTab(prev);
   syncCheckoutMode(prev);
-  syncCartBuyMode(prev);
   syncLegalMode(prev);
-  if(prev === "view-product") updateProductBuyState();
   if(tgBack){ if(viewStack.length) tgBack.show(); else tgBack.hide(); }
 }
 
@@ -3193,7 +2172,6 @@ function hideSubView(){
   document.querySelector('.navitem[data-view="home"]').classList.add("active");
   document.getElementById("scrollarea").scrollTop = 0;
   syncCheckoutMode("view-home");
-  syncCartBuyMode("view-home");
   syncLegalMode("view-home");
 }
 
@@ -3217,259 +2195,74 @@ document.querySelectorAll(".navitem").forEach(item=>{
     document.getElementById("view-"+view).classList.add("active");
     document.getElementById("scrollarea").scrollTop = 0;
     syncCheckoutMode("view-"+view);
-    syncCartBuyMode("view-"+view);
     syncLegalMode("view-"+view);
   });
 });
 
 
-/* ---------- Subscriptions ---------- */
-const subs = [
-  /* Optional per-subscription `img` field: set it to a photo URL to show that photo
-     instead of the colored `label` text/badge, e.g.:
-     img:"images/subsc/psplus.png"
-     Leave `img` out (or null) to keep showing the `grad` + `label` badge as before.
+/* ---------- Цены из админки в прямом эфире ----------
+   Раз в несколько секунд (и при возврате в приложение) берём актуальные
+   цены из /api/products, обновляем данные каталога и сразу перерисовываем
+   открытый экран — так же, как это делает stock-sync.js для наличия. */
+(() => {
+  const norm = value => String(value || '').normalize('NFKC').replace(/[—–]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
+  let busy = false;
 
-     `brand` — короткое имя, которое показывается под карточкой на главной
-     (по аналогии с "PS Plus" / "EA Play" на фото-референсе). Необязательное:
-     если не задано, используется `name`.
-
-     `tag` — бейдж поверх обложки на главной (как "500+ ИГР" на фото).
-
-     ЦЕНА — теперь считается точно так же, как у игр (см. комментарий у
-     getProductPricing/GRAND THEFT AUTO VI выше): вместо готовой цены в ₽ на
-     страну задаётся `native` — сколько стоит сама подписка в PS Store нужного
-     региона (Rs для Индии, ₺ для Турции) за выбранный период. Реальная цена,
-     которая показывается на странице подписки и попадает в корзину, считается
-     от этой суммы через calcCardsForAmount — то есть от того, какие карты
-     пополнения реально понадобятся, чтобы купить подписку в PS Store. Поэтому
-     итоговая цена всегда совпадает с раскладкой по картам в корзине.
-
-     `old` — старая (зачёркнутая) цена в ₽, задаётся вручную по каждому периоду,
-     как и в играх (см. getProductPricing). На саму цену (native/priceNum) не
-     влияет — просто показывается рядом зачёркнутой. Если для периода стоит 0
-     или поле не задано — зачёркнутая цена не показывается. */
-  {
-    key:"essential", name:"ESSENTIAL", brand:"PS Plus Essential", tierLabel:"Essential", grad:"linear-gradient(135deg,#4B4E9E,#2E3070)", label:"MC<br>ESSENTIAL", img:"images/subsc/essential.jpg",
-    tag:"450+ ИГР",
-    native:{
-      IN:{1:749, 3:1999, 12:5999},
-      TR:{1:175, 3:450, 12:1500}
-    },
-    old:{1:0, 3:0, 12:0}
-  },
-  {
-    key:"extra", name:"EXTRA", brand:"PS Plus Extra", tierLabel:"Extra", grad:"linear-gradient(135deg,#E88A2B,#C4501E)", label:"MC<br>EXTRA", img:"images/subsc/extra.jpg",
-    tag:"700+ ИГР",
-    native:{
-      IN:{1:1199, 3:3199, 12:9499},
-      TR:{1:300, 3:800, 12:2500}
-    },
-    old:{1:0, 3:0, 12:0}
-  },
-  {
-    key:"premium", name:"DELUXE", brand:"PS Plus Premium", tierLabel:"Deluxe", grad:"linear-gradient(135deg,#9B4DFF,#5B5FEF)", label:"MC<br>PREMIUM", img:"images/subsc/deluxe.png",
-    tag:"1000+ ИГР",
-    native:{
-      IN:{1:1499, 3:3999, 12:11999},
-      TR:{1:400, 3:1000, 12:3000}
-    },
-    old:{1:0, 3:0, 12:0}
-  },
-  {
-    key:"eaplay", name:"EA Play", brand:"EA Play", tierLabel:"EA Play", grad:"linear-gradient(135deg,#0F6D3C,#083D22)", label:"EA<br>PLAY", img:"images/subsc/eaplay.jpg",
-    tag:"40+ ИГР",
-    native:{
-      IN:{1:499, 12:2999},
-      TR:{1:100, 12:600}
-    },
-    old:{1:0, 12:0}
-  }
-];
-
-/* Группы на главной: 2 фото-карточки (PS Plus / EA Play), как на референсе.
-   PS Plus объединяет тарифы essential/extra/premium — выбор тарифа появляется
-   уже внутри карточки товара (см. renderSubDetailTiers). У EA Play всего один
-   тариф, поэтому строка выбора тарифа для неё скрыта. */
-const subGroups = [
-  {
-    key:"psplus", title:"PS Plus", tag:"1000+ ИГР", badge:"-18%",
-    img:"images/subsc/psplus.png",
-    grad:"linear-gradient(135deg,#4B4E9E,#2E3070)",
-    tiers:["essential","extra","premium"]
-  },
-  {
-    key:"eaplay", title:"EA Play", tag:"40+ ИГР", badge:"-15%",
-    img:"images/subsc/eaplay.jpg",
-    grad:"linear-gradient(135deg,#0F6D3C,#083D22)",
-    tiers:["eaplay"]
-  }
-];
-
-
-
-const periodLabel = {1:"1 месяц", 3:"3 месяца", 12:"12 месяцев"};
-
-/* Карточки подписок на главной — просто обложка + бейдж + название бренда,
-   без цены (по аналогии с фото-референсом). Выбор периода/региона и сама
-   цена остаются внутри карточки товара (см. renderSubDetailPeriods /
-   renderSubDetailCountries / updateSubDetailPrice ниже) — на главной их
-   больше нет, только переход в неё по тапу. */
-/* Реальная цена подписки для страны/периода — считается от суммы в PS Store
-   (native, в Rs/₺) через calcCardsForAmount, ровно как у игр (см. комментарий
-   в объекте subs выше и у getProductPricing). */
-function getSubPricing(s, period, country){
-  const nativeAmount = s.native[country][period];
-  const {totalCost} = calcCardsForAmount(country, nativeAmount);
-  const oldNum = (s.old && s.old[period]) ? s.old[period] : null;
-  const old = oldNum ? `${formatPrice(oldNum)} ₽` : null;
-  return {priceNum: totalCost, nativePrice: nativeAmount, old, oldNum};
-}
-
-/* ---------- Subscription detail: group (PS Plus / EA Play) + tier + country + period ----------
-   PS Plus открывает карточку с выбором тарифа (Essential/Extra/Deluxe) — внутри
-   неё уже выбираются период и регион, как и раньше. EA Play — тот же экран,
-   но без строки выбора тарифа, т.к. тариф у неё один. */
-let subDetailState = {groupKey:null, tier:null, period:1, country:"IN"};
-
-function openSubGroup(groupKey, tier, period){
-  const group = subGroups.find(x=>x.key===groupKey);
-  const defaultTier = group.tiers.includes(tier) ? tier : group.tiers[0];
-  const s = subs.find(x=>x.key===defaultTier);
-  const periods = Object.keys(s.native.IN).map(Number);
-  subDetailState = {groupKey, tier: defaultTier, period: periods.includes(period) ? period : periods[0], country:"IN"};
-
-  document.getElementById("subdetail-topbar-title").textContent = group.title;
-
-  renderSubDetailHeader();
-  renderSubDetailTiers();
-  renderSubDetailPeriods();
-  renderSubDetailCountries();
-  updateSubDetailPrice();
-  showSubView("view-sub-detail");
-}
-
-function renderSubDetailHeader(){
-  const s = subs.find(x=>x.key===subDetailState.tier);
-  document.getElementById("subdetail-cover").style.background = s.img ? `url('${s.img}') center/cover no-repeat` : s.grad;
-  document.getElementById("subdetail-name").textContent = s.name;
-}
-
-function renderSubDetailTiers(){
-  const group = subGroups.find(x=>x.key===subDetailState.groupKey);
-  const row = document.getElementById("subdetail-tier-row");
-  const wrap = document.getElementById("subdetail-tier-tabs");
-
-  if(group.tiers.length <= 1){
-    row.style.display = "none";
-    wrap.innerHTML = "";
-    return;
-  }
-  row.style.display = "block";
-  wrap.innerHTML = group.tiers.map(t=>{
-    const s = subs.find(x=>x.key===t);
-    return `<div class="pill ${t===subDetailState.tier ? "active" : ""}" data-tier="${t}">${s.tierLabel || s.name}</div>`;
-  }).join("");
-  wrap.querySelectorAll(".pill").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      subDetailState.tier = el.dataset.tier;
-      const s = subs.find(x=>x.key===subDetailState.tier);
-      const periods = Object.keys(s.native.IN).map(Number);
-      if(!periods.includes(subDetailState.period)) subDetailState.period = periods[0];
-      renderSubDetailHeader();
-      renderSubDetailTiers();
-      renderSubDetailPeriods();
-      updateSubDetailPrice();
-    });
-  });
-}
-
-function renderSubDetailPeriods(){
-  const s = subs.find(x=>x.key===subDetailState.tier);
-  const periods = Object.keys(s.native.IN).map(Number);
-  const wrap = document.getElementById("subdetail-period-tabs");
-  wrap.innerHTML = periods.map(p=>`<div class="pill ${p===subDetailState.period ? "active" : ""}" data-period="${p}">${periodLabel[p]}</div>`).join("");
-  wrap.querySelectorAll(".pill").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      subDetailState.period = parseInt(el.dataset.period,10);
-      renderSubDetailPeriods();
-      updateSubDetailPrice();
-    });
-  });
-}
-
-function renderSubDetailCountries(){
-  const codes = ["IN","TR"];
-  const wrap = document.getElementById("subdetail-country-tabs");
-  wrap.innerHTML = codes.map(c=>`<div class="pill ${c===subDetailState.country ? "active" : ""}" data-country="${c}">${countryNames[c]}</div>`).join("");
-  wrap.querySelectorAll(".pill").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      subDetailState.country = el.dataset.country;
-      renderSubDetailCountries();
-      updateSubDetailPrice();
-    });
-  });
-}
-
-function updateSubDetailPrice(){
-  const s = subs.find(x=>x.key===subDetailState.tier);
-  const {priceNum, old} = getSubPricing(s, subDetailState.period, subDetailState.country);
-  document.getElementById("subdetail-price").textContent = `${formatPrice(priceNum)} ₽`;
-  const oldEl = document.getElementById("subdetail-old");
-  oldEl.textContent = old || "";
-  oldEl.style.display = old ? "block" : "none";
-  updateSubDetailBuyButton();
-}
-
-function updateSubDetailBuyButton(){
-  const s = subs.find(x=>x.key===subDetailState.tier);
-  const {priceNum, oldNum, nativePrice} = getSubPricing(s, subDetailState.period, subDetailState.country);
-  const countryName = countryNames[subDetailState.country];
-  const name = `${s.name} (${periodLabel[subDetailState.period]}, ${countryName})`;
-  const buyBtn = document.getElementById("subdetail-buy-btn");
-
-  if(isInCart(name)){
-    buyBtn.textContent = "Мои покупки";
-    buyBtn.style.background = "var(--green)";
-    buyBtn.onclick = ()=> goToCart();
-  } else {
-    buyBtn.textContent = "Купить";
-    buyBtn.style.background = "";
-    buyBtn.onclick = ()=>{
-      addToCart({
-        name,
-        edition: `${periodLabel[subDetailState.period]} · ${countryName}`,
-        price: `${formatPrice(priceNum)} ₽`,
-        grad: s.grad,
-        img: s.img || null,
-        type: "subscription",
-        country: subDetailState.country,
-        priceNum,
-        oldNum,
-        nativePrice
-      });
-      updateSubDetailBuyButton();
+  function applyPrices(products){
+    const prices = new Map();
+    for(const p of products){
+      const price = Number(p.price);
+      if(Number.isFinite(price) && price > 0) prices.set(norm(p.name), price);
+    }
+    let changed = false;
+    const update = (item, ...names) => {
+      for(const name of names){
+        const price = prices.get(norm(name));
+        if(price === undefined) continue;
+        if(item.price !== price){ item.price = price; changed = true; }
+        return;
+      }
     };
+    for(const cat of Object.values(giftCatalogs)){
+      for(const group of cat.countries || [{items: cat.items || []}]){
+        for(const item of group.items || []) if(item.name) update(item, item.name);
+      }
+    }
+    for(const svc of Object.values(donateServices)){
+      const packages = [...(svc.packages || []), ...(svc.variants || []).flatMap(v => v.packages || [])];
+      for(const pkg of packages) update(pkg, `${svc.name} — ${pkg.name}`, pkg.name);
+      for(const item of (svc.codesCatalog && svc.codesCatalog.items) || []) update(item, item.name);
+    }
+    if(!changed) return;
+
+    if(currentView === 'view-giftcards' && giftCardState.catKey) renderGiftGrid();
+    if(currentView === 'view-topup' && currentTopup && !donateServices[currentTopup].customAmount) renderTopupPackages();
+    if(currentView === 'view-payment' && paymentConfig){
+      const price = prices.get(norm(paymentConfig.itemName));
+      if(price !== undefined && price !== paymentConfig.itemPrice){
+        paymentConfig.itemPrice = price;
+        updatePaymentTotals();
+      }
+    }
   }
-}
 
-document.getElementById("subdetail-back").addEventListener("click", ()=> goBack());
+  async function syncCatalogPrices(){
+    if(busy) return;
+    busy = true;
+    try{
+      const response = await fetch('/api/products', {cache:'no-store'});
+      if(!response.ok) return;
+      applyPrices(await response.json());
+    }catch(e){
+      console.warn('Не удалось обновить цены', e);
+    }finally{
+      busy = false;
+    }
+  }
 
-/* Клик по карточкам каталога (Хиты продаж/Новинки, если появятся на
-   главной) открывает страницу товара через cardHTML/openProduct — как и
-   раньше. Сами "Цифровые подписки" рендерятся выше и используют отдельную
-   разметку/обработчик (см. subscriptionCardHTML и openTopup). */
-document.querySelectorAll(".game-card[data-list]").forEach(card=>{
-  card.style.cursor = "pointer";
-  card.addEventListener("click", ()=>{
-    const list = card.dataset.list;
-    const idx = parseInt(card.dataset.idx, 10);
-    openProduct(list, idx);
-  });
-});
-
-renderCart();
-/* Load administrator prices from the API so storefront reflects edits. */
-(window.syncCatalogPrices=async function syncCatalogPrices(){try{const r=await fetch('/api/products',{cache:'no-store'});if(!r.ok)return;const items=await r.json();const norm=s=>String(s).normalize('NFKC').replace(/[—–]/g,'-').replace(/\s+/g,' ').trim().toLowerCase();const byName=new Map(items.map(p=>[norm(p.name),p]));const walk=v=>{if(Array.isArray(v))v.forEach(walk);else if(v&&typeof v==='object'){if(typeof v.name==='string'){const p=byName.get(norm(v.name));if(p&&Number.isFinite(p.price)){v.price=p.price;v.priceNum=p.price;v.soldOut=p.soldOut}}Object.values(v).forEach(walk)}};walk(typeof giftCatalogs!=='undefined'?giftCatalogs:null);if(typeof games!=='undefined')walk(games);if(typeof subs!=='undefined')walk(subs);if(typeof renderAll==='function')renderAll();}catch(e){console.warn('Catalog price sync failed',e)}})();
-setInterval(()=>{if(typeof syncCatalogPrices==='function')syncCatalogPrices()},15000);
-
+  window.syncCatalogPrices = syncCatalogPrices;
+  window.addEventListener('focus', syncCatalogPrices);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) syncCatalogPrices(); });
+  setInterval(() => { if(!document.hidden) syncCatalogPrices(); }, 5000);
+  syncCatalogPrices();
+})();

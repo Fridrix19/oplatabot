@@ -1,4 +1,217 @@
-<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0d1117;color:#eef2ff}aside{width:240px;background:#151b26;min-height:100vh;padding:24px;position:fixed}main{margin-left:240px;padding:28px;max-width:1400px}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}.card{background:#182130;border:1px solid #2b3850;border-radius:18px;overflow:hidden;box-shadow:0 8px 25px #0002}.card img{width:100%;height:150px;object-fit:cover}.info{padding:18px}.price{color:#9eb3ff;font-size:20px;font-weight:700}input,button{padding:11px 13px;border-radius:10px;border:1px solid #35445e;background:#101722;color:#fff}button{background:#536dff;border:0;cursor:pointer}nav div{padding:13px 15px;margin:6px 0;color:#aab7cc;border-radius:10px;cursor:pointer}nav div:hover{background:#25314a;color:#fff}section{display:none}section.active{display:block}.bottom-nav{display:none}@media(max-width:700px){aside{position:static;width:100%;min-height:0;padding:14px 16px}aside h2{margin:0 0 10px}aside nav{display:none}main{margin:0;padding:16px 14px 90px}.cards{grid-template-columns:1fr;gap:14px}.card img{height:170px}.bottom-nav{position:fixed;display:flex;bottom:0;left:0;right:0;height:70px;background:#151b26;border-top:1px solid #2b3850;z-index:10;padding:6px;gap:6px}.bottom-nav button{flex:1;background:transparent;color:#aab7cc;font-size:12px}.bottom-nav button:active{background:#25314a;color:#fff}}
-@media(max-width:700px){body:has(aside) .cards{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}body:has(aside) .card img{height:85px!important}.info{padding:8px!important;font-size:11px}} </style><aside><h2>PLATAS</h2><nav><div onclick="tab('products')">🛍️ Каталог</div></nav></aside><main><div><input id="token" placeholder="ADMIN_TOKEN" type="password"><button onclick="load()">Войти</button></div><section id="products" class="active"><h1>Каталог товаров</h1><input id="search" placeholder="Поиск товаров" oninput="filterCatalog()"><p id="feedback"></p><div id="grid" class="cards"></div></section></main><script>const H=()=>({Authorization:'Bearer '+token.value,'Content-Type':'application/json'});function tab(x){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(x).classList.add('active')}async function load(){let p=await fetch('/api/admin/products',{headers:H()}).then(r=>r.json());grid.innerHTML=p.map(x=>`<div class=card>${x.image?`<img src="${x.image}">`:''}<div class=info><b>${x.name}</b><p>${x.category}</p><div class=price><input id="p_${x.id}" type="number" step="0.01" min="0" value="${x.price}"> ₽</div><p>Остаток: <input id="s_${x.id}" type="number" min="0" step="1" value="${x.stock??x.available}" style="width:80px"><button onclick="saveStock('${x.id}')">Сохранить</button></p><button onclick="status('${x.id}','${x.status==='disabled'?'available':'disabled'}')">${x.status==='disabled'?'Включить':'Отключить'}</button></div></div>`).join('');let o=await fetch('/api/admin/orders',{headers:H()}).then(r=>r.json());olist.innerHTML=o.map(x=>`<div class=card><div class=info><b>${x.id}</b><p>${x.productId}</p><p>${x.amount} ₽ · ${x.status}</p></div></div>`).join('')}function filterCatalog(){const q=search.value.toLowerCase();grid.querySelectorAll(".card").forEach(c=>c.style.display=c.innerText.toLowerCase().includes(q)?"":"none")}async function saveStock(id){const stock=Number(document.getElementById('s_'+id).value);const price=Number(document.getElementById('p_'+id).value);if(!Number.isSafeInteger(stock)||stock<0){feedback.textContent='Укажите целый остаток от 0';return}await fetch('/api/admin/products/'+id,{method:'PATCH',headers:H(),body:JSON.stringify({stock,price})});await load();feedback.textContent='Сохранено'}async function status(id,s){await fetch('/api/admin/products/'+id,{method:'PATCH',headers:H(),body:JSON.stringify({status:s})});load()}</script><script src="admin-orders.js"></script><div class="bottom-nav"><button onclick="tab('products')">🛍️<br>Каталог</button></div>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PLATAS — каталог</title>
+<style>
+:root{--bg:#0A0F1C;--card:#121A2C;--card-2:#1A2438;--stroke:#253048;--text:#F2F5FA;--dim:#8592AD;--mid:#B9C3D9;--accent:#2E44C4;--green:#17A876;--red:#E5484D;--amber:#E0A23B}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 -apple-system,BlinkMacSystemFont,"Inter",Roboto,Helvetica,Arial,sans-serif}
+button,input,select{font:inherit;color:inherit}
+input,select{background:var(--card-2);border:1px solid var(--stroke);border-radius:10px;padding:9px 11px;min-width:0;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+button{border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;white-space:nowrap}
+button:active{transform:scale(.97)}
+button.ghost{background:var(--card-2);color:var(--mid);border:1px solid var(--stroke)}
+button:disabled{opacity:.45;cursor:default}
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px 40px}
+header{position:sticky;top:0;z-index:5;background:rgba(10,15,28,.97);border-bottom:1px solid var(--stroke)}
+.head{max-width:980px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-size:18px;font-weight:800;margin-right:auto}
+.tools{display:flex;gap:8px;width:100%}
+.tools input{flex:1}
+.tools select{max-width:40%}
+.login{max-width:360px;margin:12vh auto 0;background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.login h1{margin:0;font-size:20px}
+.muted{color:var(--dim);font-size:12.5px}
+.group{margin:18px 0 8px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:52px minmax(0,1fr) 120px 96px auto auto;align-items:center;gap:10px;background:var(--card);border:1px solid var(--stroke);border-radius:14px;padding:8px 10px}
+.row.off .thumb,.row.off .info,.row.off .field{opacity:.5}
+.short{display:none}
+input[type=number]{-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.thumb{width:52px;height:52px;border-radius:10px;background:var(--card-2) center/cover no-repeat;flex-shrink:0}
+.name{font-weight:700;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.meta{display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--card-2);color:var(--dim)}
+.badge.red{background:rgba(229,72,77,.15);color:#FF8589}
+.badge.amber{background:rgba(224,162,59,.15);color:var(--amber)}
+.field{display:flex;flex-direction:column;gap:3px}
+.field span{font-size:11px;color:var(--dim)}
+.field input{width:100%;padding:8px 9px}
+.field.changed input{border-color:var(--amber)}
+.empty{padding:40px 0;text-align:center;color:var(--dim)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.2s;background:var(--green);color:#06140F;font-weight:800;padding:10px 16px;border-radius:999px;z-index:10;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#toast.err{background:var(--red);color:#fff}
+@media (max-width:640px){
+  .wrap{padding:12px 12px 32px}
+  .head{padding:10px 12px}
+  .row{gap:6px 8px;padding:8px}
+  .thumb{width:40px;height:40px;grid-area:img}
+  .name{font-size:13px}
+  .field span{display:none}
+  .field{position:relative}
+  .field input{padding:7px 30px 7px 8px}
+  .field::after{content:attr(data-unit);position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:12px;pointer-events:none}
+  .row button{padding:8px 10px}
+  .long{display:none}.short{display:inline}
+  .info{grid-area:info}
+  .f-price{grid-area:price}
+  .f-stock{grid-area:stock}
+  .save{grid-area:save}
+  .toggle{grid-area:toggle}
+  .row{grid-template-columns:40px minmax(0,1fr) minmax(0,.8fr) auto auto;grid-template-areas:"img info info info info" "price price stock save toggle"}
+  .f-price input::placeholder,.f-stock input::placeholder{color:var(--dim)}
+}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+  <h1>PLATAS — каталог</h1>
+  <div class="muted">Цены и наличие. Заказы и коды обрабатываются в Telegram-боте оператора.</div>
+  <input id="token" type="password" placeholder="Пароль администратора" autocomplete="current-password">
+  <button id="login-btn">Войти</button>
+  <div id="login-error" class="muted" style="color:#FF8589"></div>
+</div>
 
+<div id="app" hidden>
+  <header>
+    <div class="head">
+      <div class="brand">Каталог <span id="count" class="muted"></span></div>
+      <button class="ghost" id="reload">Обновить</button>
+      <button class="ghost" id="logout">Выйти</button>
+      <div class="tools">
+        <input id="search" type="search" placeholder="Поиск товаров" autocomplete="off">
+        <select id="category"><option value="">Все категории</option></select>
+      </div>
+    </div>
+  </header>
+  <main class="wrap"><div id="list"></div></main>
+</div>
+<div id="toast"></div>
 
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let token = '', products = [];
+  try { token = sessionStorage.getItem('adminToken') || ''; } catch (e) {}
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const norm = s => String(s || '').toLowerCase().replace(/ё/g, 'е');
+  const stockOf = p => Number.isFinite(p.stock) ? p.stock : (p.available ?? 0);
+
+  let toastTimer;
+  function toast(text, error){
+    const el = $('toast'); el.textContent = text; el.classList.toggle('err', !!error); el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  async function api(path, options = {}){
+    const r = await fetch(path, {...options, headers:{'Authorization':'Bearer ' + token, 'Content-Type':'application/json'}});
+    const data = await r.json().catch(() => ({}));
+    if (r.status === 401) { logout(); throw new Error(data.error || 'Неверный пароль'); }
+    if (!r.ok) throw new Error(data.error || 'Ошибка сервера');
+    return data;
+  }
+
+  async function load(){
+    products = await api('/api/admin/products');
+    const categories = [...new Set(products.map(p => p.category || 'Без категории'))].sort((a, b) => a.localeCompare(b, 'ru'));
+    const current = $('category').value;
+    $('category').innerHTML = '<option value="">Все категории</option>' + categories.map(c => `<option${c === current ? ' selected' : ''}>${esc(c)}</option>`).join('');
+    render();
+  }
+
+  function render(){
+    const words = norm($('search').value).split(/\s+/).filter(Boolean);
+    const cat = $('category').value;
+    const shown = products.filter(p => (!cat || (p.category || 'Без категории') === cat) && words.every(w => norm(p.name + ' ' + p.category).includes(w)));
+    $('count').textContent = `· ${shown.length} из ${products.length}`;
+    if (!shown.length) { $('list').innerHTML = '<div class="empty">Ничего не найдено</div>'; return; }
+    const groups = new Map();
+    for (const p of shown) { const c = p.category || 'Без категории'; if (!groups.has(c)) groups.set(c, []); groups.get(c).push(p); }
+    $('list').innerHTML = [...groups].map(([c, items]) => `<div class="group">${esc(c)} · ${items.length}</div><div class="list">${items.map(row).join('')}</div>`).join('');
+  }
+
+  function row(p){
+    const off = p.status === 'disabled';
+    const stock = stockOf(p);
+    const badges = [off ? '<span class="badge red">Отключён</span>' : '', !off && stock <= 0 ? '<span class="badge amber">Нет в наличии</span>' : ''].join('');
+    return `<div class="row${off ? ' off' : ''}" data-id="${esc(p.id)}">
+      <div class="thumb" style="${p.image ? `background-image:url('${esc(p.image)}')` : ''}"></div>
+      <div class="info"><div class="name" title="${esc(p.name)}">${esc(p.name)}</div><div class="meta">${badges}</div></div>
+      <label class="field f-price" data-unit="₽"><span>Цена, ₽</span><input data-k="price" placeholder="Цена" aria-label="Цена" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(p.price)}" data-orig="${esc(p.price)}"></label>
+      <label class="field f-stock" data-unit="шт"><span>Остаток</span><input data-k="stock" placeholder="Остаток" aria-label="Остаток" type="number" inputmode="numeric" min="0" step="1" value="${esc(stock)}" data-orig="${esc(stock)}"></label>
+      <button class="save" data-act="save" disabled><span class="long">Сохранить</span><span class="short">✓</span></button>
+      <button class="ghost toggle" data-act="toggle"><span class="long">${off ? 'Включить' : 'Выключить'}</span><span class="short">${off ? 'Вкл' : 'Выкл'}</span></button>
+    </div>`;
+  }
+
+  function rowState(rowEl){
+    let changed = false;
+    rowEl.querySelectorAll('input[data-k]').forEach(i => { const c = i.value !== i.dataset.orig; i.parentElement.classList.toggle('changed', c); changed ||= c; });
+    rowEl.querySelector('[data-act="save"]').disabled = !changed;
+  }
+
+  async function save(rowEl){
+    const id = rowEl.dataset.id;
+    const price = Number(rowEl.querySelector('[data-k="price"]').value);
+    const stock = Number(rowEl.querySelector('[data-k="stock"]').value);
+    if (!Number.isFinite(price) || price < 0) return toast('Некорректная цена', true);
+    if (!Number.isSafeInteger(stock) || stock < 0) return toast('Остаток — целое число от 0', true);
+    const btn = rowEl.querySelector('[data-act="save"]'); btn.disabled = true;
+    try {
+      const updated = await api('/api/admin/products/' + encodeURIComponent(id), {method:'PATCH', body:JSON.stringify({price, stock})});
+      Object.assign(products.find(p => p.id === id), updated);
+      rowEl.outerHTML = row(products.find(p => p.id === id));
+      toast('Сохранено');
+    } catch (e) { toast(e.message, true); rowState(rowEl); }
+  }
+
+  async function toggle(rowEl){
+    const p = products.find(x => x.id === rowEl.dataset.id);
+    const status = p.status === 'disabled' ? 'available' : 'disabled';
+    try {
+      Object.assign(p, await api('/api/admin/products/' + encodeURIComponent(p.id), {method:'PATCH', body:JSON.stringify({status})}));
+      rowEl.outerHTML = row(p);
+      toast(status === 'disabled' ? 'Товар отключён' : 'Товар включён');
+    } catch (e) { toast(e.message, true); }
+  }
+
+  $('list').addEventListener('input', e => { const r = e.target.closest('.row'); if (r) rowState(r); });
+  $('list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input[data-k]')) { const r = e.target.closest('.row'); if (!r.querySelector('[data-act="save"]').disabled) save(r); } });
+  $('list').addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const r = b.closest('.row');
+    if (b.dataset.act === 'save') save(r); else toggle(r);
+  });
+  $('search').addEventListener('input', render);
+  $('category').addEventListener('change', render);
+  $('reload').addEventListener('click', () => load().then(() => toast('Обновлено')).catch(e => toast(e.message, true)));
+
+  function logout(){
+    token = ''; try { sessionStorage.removeItem('adminToken'); } catch (e) {}
+    $('app').hidden = true; $('login').hidden = false;
+  }
+  $('logout').addEventListener('click', logout);
+
+  async function login(){
+    token = $('token').value.trim() || token;
+    $('login-error').textContent = '';
+    try {
+      await load();
+      try { sessionStorage.setItem('adminToken', token); } catch (e) {}
+      $('login').hidden = true; $('app').hidden = false;
+    } catch (e) { $('login-error').textContent = e.message; }
+  }
+  $('login-btn').addEventListener('click', login);
+  $('token').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  if (token) login();
+})();
+</script>
+</body>
+</html>

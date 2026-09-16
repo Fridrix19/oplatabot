@@ -87,7 +87,30 @@ function attach(app,db,save,admin,transport){
     const product=db.products.find(p=>p.id===o.productId);if(!product||product.stock<=0)return res.status(409).json({error:'Нет в наличии'});
     product.stock--;o.status='paid';o.paidAt=new Date().toISOString();await save();res.json({status:o.status});
   }catch(e){next(e);}});
-  app.post('/api/payments/heleket/webhook',async(req,res)=>{try{const key=(process.env.HELEKET_API_KEY||'').trim();const provided=String(req.headers.sign||'');const raw=JSON.stringify(req.body);const expected=crypto.createHash('md5').update(Buffer.from(raw).toString('base64')+key).digest('hex');if(!key||provided!==expected)return res.sendStatus(401);const p=req.body.data||req.body,o=db.orders.find(x=>x.id===p.order_id);if(!o)return res.sendStatus(404);if(['paid','paid_over'].includes(p.status)&&o.status==='awaiting_payment'){const product=db.products.find(x=>x.id===o.productId);if(!product||product.stock<=0)return res.sendStatus(409);product.stock--;o.status='paid';o.paidAt=new Date().toISOString();o.heleketStatus=p.status;await save();}else {o.heleketStatus=p.status;await save();}res.json({ok:true});}catch(e){console.error('Heleket webhook:',e.message);res.sendStatus(500);}});
+  // Heleket передаёт подпись полем sign в теле: md5(base64(json без sign) + API key).
+  // PHP json_encode экранирует "/", поэтому делаем так же.
+  function heleketSignature(data,key){return crypto.createHash('md5').update(Buffer.from(JSON.stringify(data).replace(/\//g,'\\/')).toString('base64')+key).digest('hex');}
+  function validHeleketSignature(data,sign,key){
+    if(!key||typeof sign!=='string'||!/^[a-f0-9]{32}$/i.test(sign))return false;
+    return crypto.timingSafeEqual(Buffer.from(heleketSignature(data,key)),Buffer.from(sign.toLowerCase()));
+  }
+  app.post('/api/payments/heleket/webhook',async(req,res)=>{try{
+    const key=(process.env.HELEKET_API_KEY||'').trim();
+    const {sign,...data}=req.body||{};
+    if(!validHeleketSignature(data,sign,key))return res.status(401).json({error:'Invalid signature'});
+    const o=db.orders.find(x=>x.id===data.order_id);
+    if(!o)return res.status(404).json({error:'Order not found'});
+    o.heleketStatus=data.status;
+    const waiting=pending(o)||['cancelled','expired'].includes(o.status);
+    if(['paid','paid_over'].includes(data.status)&&waiting){
+      // Деньги уже получены: засчитываем оплату, даже если таймер заказа успел истечь.
+      if(!pending(o))o.paidAfterExpiry=true;
+      const product=db.products.find(x=>x.id===o.productId);
+      if(product&&Number.isFinite(product.stock))product.stock=Math.max(0,product.stock-1);
+      o.status='paid';o.paidAt=new Date().toISOString();
+    }
+    await save();res.json({ok:true});
+  }catch(e){console.error('Heleket webhook:',e.message);res.status(500).json({error:'Webhook failed'});}});
   app.post('/api/payments/:id/webhook',(req,res)=>res.status(404).json({error:'Настоящая платёжная система пока не подключена'}));
   app.patch('/api/admin/orders/:id',admin,async(req,res,next)=>{try{
     if(req.body.action!=='deliver')return res.status(400).json({error:'Выберите выдачу'});

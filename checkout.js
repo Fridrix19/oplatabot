@@ -1,7 +1,6 @@
 (() => {
   let busy=false,lastKey='',lastSignature='';
   const value=id=>document.getElementById(id)?.value.trim()||'';
-  window.buySingleItem=item=>{const catalogName=item.type==='game'?games[productDetailState.listKey][productDetailState.idx].name:item.type==='subscription'?subs.find(s=>s.key===subDetailState.tier).name:item.name;openPaymentPage({title:item.name,heading:item.name,itemName:item.name,itemPrice:item.priceNum||priceToNumber(item.price),itemGrad:item.grad,itemImg:item.img,showId:false,showQty:false,onConfirm:(total,email)=>window.checkoutOrder([{...item,catalogName,qty:1}],`${total} ₽`,email)});};
   window.checkoutOrder=async(items,totalLabel,email)=>{
     if(busy)return;
     if(!window.Telegram?.WebApp?.initData){showToast('Откройте магазин в Telegram');return;}
@@ -22,7 +21,7 @@
       const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':Telegram.WebApp.initData},body:JSON.stringify({...payload,checkoutKey:lastKey})});
       const order=await r.json();if(!r.ok)throw new Error(order.error||'Не удалось создать заказ');
       lastSignature='';lastKey='';
-      hideSubView();showToast('Оплатите товар в Telegram');
+      hideSubView();showToast('Открываем страницу оплаты');
       window.refreshPurchases?.();
       if(order.paymentUrl){
         const paymentUrl=new URL(order.paymentUrl,location.origin).href;
@@ -31,11 +30,6 @@
       } else throw new Error('Ссылка оплаты не создана');
     }catch(e){showToast(e.message);}finally{busy=false;}
   };
-  // Cart is no longer a navigable feature; legacy DOM is removed after binding.
-  document.getElementById('view-cart')?.remove();
-  document.getElementById('cart-add-toast')?.remove();
-  document.getElementById('cart-buy-btn')?.remove();
-  document.querySelectorAll('.navitem[data-view="purchases"] .nav-badge').forEach(el=>el.remove());
   document.querySelector('.navitem[data-view="purchases"]')?.addEventListener('click',()=>{renderPurchases();window.refreshPurchases?.();});
   if(new URLSearchParams(location.search).get('page')==='purchases')showSubView('view-purchases');
 })();

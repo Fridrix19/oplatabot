@@ -17,7 +17,7 @@
 
       <div class="searchbar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="catalog-search" type="search" placeholder="Найти игру или подписку" aria-label="Поиск по каталогу" autocomplete="off" aria-controls="search-results">
+        <input id="catalog-search" type="search" placeholder="Найти товар или сервис" aria-label="Поиск по каталогу" autocomplete="off" aria-controls="search-results">
         <button id="search-clear" type="button" aria-label="Очистить поиск" hidden>×</button>
       </div>
       <section id="search-results" aria-label="Результаты поиска" hidden><p id="search-count" role="status"></p><div id="search-items"></div></section>
@@ -106,76 +106,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.9-10-9.3C.5 8.1 2.3 4.5 6 4.1c2-.2 3.6.9 6 3.4 2.4-2.5 4-3.6 6-3.4 3.7.4 5.5 4 4 7.6-2.5 4.4-10 9.3-10 9.3z"/></svg>
         </div>
         <div class="empty-title">Пока пусто</div>
-        <div class="empty-sub">Добавляйте игры и подписки в избранное, нажав на сердечко в карточке товара</div>
+        <div class="empty-sub">Добавляйте товары в избранное, нажав на сердечко в карточке товара</div>
         <button class="empty-btn" onclick="hideSubView()">Открыть каталог</button>
-      </div>
-    </div>
-
-    <!-- ============ CART VIEW ============ -->
-    <div class="view" id="view-cart">
-      <div class="detail-topbar" id="cart-topbar">
-        <div class="detail-back" id="cart-back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Назад
-        </div>
-      </div>
-      <div class="cx-head">
-        <div>
-          <div class="cx-head-title">Корзина</div>
-          <div class="cx-head-sub" id="cx-head-sub"></div>
-        </div>
-      </div>
-
-      <div id="cart-items"></div>
-
-      <div class="cx-promo-toggle" id="cx-promo-toggle" style="display:none;">
-        <span class="promo-toggle-label"><span class="promo-percent-badge">%</span>Есть промокод?</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-      </div>
-      <div class="cx-promo-panel" id="cx-promo-panel" style="display:none;">
-        <div class="field-label" style="margin:0 16px 8px;">Промокод</div>
-        <div class="cart-promo-row" id="cart-promo-row">
-          <input class="field-input" id="cart-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
-          <button class="cart-promo-btn" id="cart-promo-apply-btn">Применить</button>
-        </div>
-        <div class="field-error" id="cart-promo-error">Промокод недействителен</div>
-        <div class="cart-promo-success" id="cart-promo-success"></div>
-      </div>
-      <div class="cx-promo-applied" id="cx-promo-applied" style="display:none;">
-        <span class="promo-percent-badge">%</span>
-        <span class="promo-applied-text">Промокод <b id="cx-promo-code-label"></b> применён</span>
-        <span class="x" id="cx-promo-remove"><svg class="promo-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
-      </div>
-
-      <div class="cx-checkout-card" id="cx-checkout-card" style="display:none;">
-        <div id="cx-receipt"></div>
-
-        <div class="cx-checkout-divider"></div>
-
-        <div class="field-label">Способ оплаты</div>
-        <div class="pay-methods" id="cart-pay-methods">
-          <div class="pay-method selected" data-pay="sbp"><img src="images/payment/sbp.png" alt="СБП" style="max-width:80%; max-height:32px; object-fit:contain;"></div>
-          <div class="pay-method" data-pay="card"><img src="images/payment/card.png" alt="Карта" style="max-width:82%; max-height:30px; object-fit:contain; transform:scale(1.35);"></div>
-          <div class="pay-method" data-pay="crypto"><img src="images/payment/crypto.png" alt="Крипта" style="max-width:86%; max-height:34px; object-fit:contain; border-radius:6px; transform:scale(1.35);"></div>
-        </div>
-
-        <div class="cx-checkout-divider"></div>
-
-        <div class="field-label" id="cart-email-label">E-mail</div>
-        <input class="field-input" id="cart-email-input" type="email" placeholder="Введите e-mail">
-        <div class="email-hint">Код придет Вам прямо в чат и в раздел «Мои покупки» в течение 5 минут.</div>
-        <div class="field-error" id="cart-email-error">Заполните данные</div>
-
-        <div class="agree-row" id="cart-agree-row">
-          <div class="agree-check checked" id="cart-agree-check">
-            <svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></svg>
-          </div>
-          <div>Согласен с условиями <a class="agree-link" href="#" onclick="return false;">Пользовательского соглашения</a> и <a class="agree-link" href="#" onclick="return false;">Политики конфиденциальности</a></div>
-        </div>
-      </div>
-
-      <div class="cx-buybar" id="cx-buybar" style="display:none;">
-        <button class="cx-buybar-btn" id="cart-buy-btn">Перейти к оплате</button>
       </div>
     </div>
 
@@ -232,47 +164,8 @@
       <div id="purchases-list"></div>
     </div>
 
-    <!-- ============ PRODUCT DETAIL VIEW ============ -->
-    <div class="view" id="view-product">
-      <div class="detail-topbar">
-        <div class="detail-back" id="product-back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Назад
-        </div>
-        <div class="detail-title" id="product-topbar-title"></div>
-        <div style="width:52px;"></div>
-      </div>
-      <div class="detail-cover" id="product-cover"></div>
-      <div class="detail-panel">
-        <div class="detail-name-row" style="display:flex; align-items:center; gap:8px;">
-          <div class="detail-name" id="product-name" style="flex:1; min-width:0;"></div>
-          <div id="product-heart-slot"></div>
-        </div>
-        <div class="detail-price" id="product-price"></div>
-        <div class="detail-old" id="product-old"></div>
-        <div class="detail-country-label" id="product-edition-label">Издание</div>
-        <div class="detail-country-tabs" id="product-edition-tabs"></div>
-        <div class="detail-country-label" id="product-country-label">Регион аккаунта</div>
-        <div class="detail-country-tabs" id="product-country-tabs"></div>
-        <div id="product-desc-default">
-          <div class="detail-desc-title">Описание</div>
-          <div class="detail-desc" id="product-desc"></div>
-        </div>
-      </div>
-      <button class="buy-btn" id="product-buy-btn">Добавить в корзину</button>
-      <div style="height:10px;"></div>
-    </div>
-
     <!-- ============ TOP-UP (DONATE) VIEW ============ -->
     <div class="view" id="view-topup">
-      <div class="detail-topbar">
-        <div class="detail-back" id="topup-back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Назад
-        </div>
-        <div class="detail-title" id="topup-topbar-title"></div>
-        <div style="width:52px;"></div>
-      </div>
 
       <div class="topup-info-card">
         <div class="topup-info-head">
@@ -331,15 +224,7 @@
 
     <!-- ============ GENERIC PAYMENT PAGE (donate + gift cards) ============ -->
     <div class="view" id="view-payment">
-      <div class="detail-topbar">
-        <div class="detail-back" id="payment-back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Назад
-        </div>
-        <div class="detail-title" id="payment-topbar-title"></div>
-        <div style="width:52px;"></div>
-      </div>
-      <div style="padding:4px 16px 0; font-size:20px; font-weight:800;" id="payment-heading"></div>
+      <div style="padding:14px 16px 0; font-size:20px; font-weight:800;" id="payment-heading"></div>
 
       <div class="topup-pkg-list" style="padding-top:4px;">
         <div class="topup-pkg selected" style="cursor:default;">
@@ -400,31 +285,11 @@
           <div class="pay-method" data-pay="crypto"><img src="images/payment/crypto.png" alt="Крипта" style="max-width:86%; max-height:34px; object-fit:contain; border-radius:6px; transform:scale(1.35);"></div>
         </div>
 
-        <div class="payment-card-divider"></div>
-
-        <div class="cx-promo-toggle" id="payment-promo-toggle">
-          <span class="promo-toggle-label"><span class="promo-percent-badge">%</span>Есть промокод?</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </div>
-        <div class="cx-promo-panel" id="payment-promo-panel" style="display:none;">
-          <div class="cart-promo-row" id="payment-promo-row">
-            <input class="field-input" id="payment-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
-            <button class="cart-promo-btn" id="payment-promo-apply-btn">Применить</button>
-          </div>
-          <div class="field-error" id="payment-promo-error">Промокод недействителен</div>
-          <div class="cart-promo-success" id="payment-promo-success"></div>
-        </div>
-        <div class="cx-promo-applied" id="payment-promo-applied" style="display:none;">
-          <span class="promo-percent-badge">%</span>
-          <span class="promo-applied-text">Промокод <b id="payment-promo-code-label"></b> применён</span>
-          <span class="x" id="payment-promo-remove"><svg class="promo-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
-        </div>
       </div>
 
       <div class="topup-total-box">
         <div class="summary-row"><span>Стоимость товаров</span><span id="payment-sum">0 ₽</span></div>
         <div class="summary-row" id="payment-old-discount-row" style="display:none; color:var(--green);"><span>Скидка</span><span id="payment-old-discount-amount"></span></div>
-        <div class="summary-row" id="payment-discount-row" style="display:none; color:var(--green);"><span id="payment-discount-label"></span><span id="payment-discount-amount"></span></div>
         <div class="summary-total"><span>Сумма к оплате</span><span id="payment-total">0 ₽</span></div>
       </div>
 
@@ -439,49 +304,8 @@
       <div style="height:10px;"></div>
     </div>
 
-    <!-- ============ SUBSCRIPTION DETAIL (country/period picker) ============ -->
-    <div class="view" id="view-sub-detail">
-      <div class="detail-topbar">
-        <div class="detail-back" id="subdetail-back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Назад
-        </div>
-        <div class="detail-title" id="subdetail-topbar-title"></div>
-        <div style="width:52px;"></div>
-      </div>
-      <div class="detail-cover" id="subdetail-cover" style="aspect-ratio:16/9;"></div>
-      <div class="detail-panel">
-        <div class="detail-name" id="subdetail-name"></div>
-
-        <div id="subdetail-tier-row">
-          <div class="field-label" style="margin:20px 0 8px;">Тариф</div>
-          <div class="pill-tabs" id="subdetail-tier-tabs" style="margin:0 0 4px;"></div>
-        </div>
-
-        <div class="field-label" style="margin:20px 0 8px;">Период</div>
-        <div class="pill-tabs" id="subdetail-period-tabs" style="margin:0 0 4px;"></div>
-
-        <div class="field-label" style="margin:20px 0 8px;">Регион аккаунта</div>
-        <div class="pill-tabs" id="subdetail-country-tabs" style="margin:0 0 4px;"></div>
-
-        <div class="detail-price" id="subdetail-price" style="margin-top:20px;"></div>
-        <div class="detail-old" id="subdetail-old"></div>
-        <div class="detail-desc" style="margin-top:12px;">Подписка активируется на аккаунте выбранного региона. Убедитесь, что у вас есть доступ к аккаунту нужной страны.</div>
-      </div>
-      <button class="buy-btn" id="subdetail-buy-btn">Добавить в корзину</button>
-      <div style="height:10px;"></div>
-    </div>
-
     <!-- ============ GIFT CARD CATALOG VIEW ============ -->
     <div class="view" id="view-giftcards">
-      <div class="detail-topbar">
-        <div class="detail-back" id="giftcards-back">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Назад
-        </div>
-        <div class="detail-title" id="giftcards-topbar-title"></div>
-        <div style="width:52px;"></div>
-      </div>
 
       <div class="topup-info-card" id="giftcard-info-card">
         <div class="topup-info-head">
@@ -506,18 +330,9 @@
         <div class="field-label">Или выберите пакет</div>
         <div class="tg-pkg-grid" id="tgstars-pkg-list"></div>
 
-        <div class="field-label">Промокод</div>
-        <div class="cart-promo-row" id="tgstars-promo-row">
-          <input class="field-input" id="tgstars-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
-          <button class="cart-promo-btn" id="tgstars-promo-apply-btn">Применить</button>
-        </div>
-        <div class="field-error" id="tgstars-promo-error">Промокод недействителен</div>
-        <div class="cart-promo-success" id="tgstars-promo-success"></div>
-
         <div class="topup-total-box">
           <div class="summary-row"><span>Стоимость</span><span id="tgstars-sum">0 ₽</span></div>
           <div class="summary-row" id="tgstars-old-discount-row" style="display:none; color:var(--green);"><span>Скидка</span><span id="tgstars-old-discount-amount"></span></div>
-          <div class="summary-row" id="tgstars-discount-row" style="display:none; color:var(--green);"><span id="tgstars-discount-label"></span><span id="tgstars-discount-amount"></span></div>
           <div class="summary-total"><span>Итого</span><span id="tgstars-total">0 ₽</span></div>
         </div>
 
@@ -545,18 +360,9 @@
         <div class="field-label">Выберите срок подписки</div>
         <div class="tg-prem-plan-list" id="tgprem-plan-list"></div>
 
-        <div class="field-label">Промокод</div>
-        <div class="cart-promo-row" id="tgprem-promo-row">
-          <input class="field-input" id="tgprem-promo-input" type="text" placeholder="Введите промокод" autocomplete="off" autocapitalize="off" spellcheck="false">
-          <button class="cart-promo-btn" id="tgprem-promo-apply-btn">Применить</button>
-        </div>
-        <div class="field-error" id="tgprem-promo-error">Промокод недействителен</div>
-        <div class="cart-promo-success" id="tgprem-promo-success"></div>
-
         <div class="topup-total-box">
           <div class="summary-row"><span>Стоимость</span><span id="tgprem-sum">0 ₽</span></div>
           <div class="summary-row" id="tgprem-old-discount-row" style="display:none; color:var(--green);"><span>Скидка</span><span id="tgprem-old-discount-amount"></span></div>
-          <div class="summary-row" id="tgprem-discount-row" style="display:none; color:var(--green);"><span id="tgprem-discount-label"></span><span id="tgprem-discount-amount"></span></div>
           <div class="summary-total"><span>Итого</span><span id="tgprem-total">0 ₽</span></div>
         </div>
 
@@ -807,19 +613,6 @@
     <div class="navitem" data-view="profile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
       <span>Профиль</span>
-    </div>
-  </div>
-
-  <!-- ============ ADD-TO-CART CONFIRMATION ============ -->
-  <div class="cart-add-toast" id="cart-add-toast">
-    <div class="cart-add-card" id="cart-add-card">
-      <div class="cart-add-thumb" id="cart-add-thumb"></div>
-      <div class="cart-add-info">
-        <div class="cart-add-label">Добавлено в корзину</div>
-        <div class="cart-add-name" id="cart-add-name"></div>
-      </div>
-      <div class="cart-add-check">✓</div>
-      <svg class="cart-add-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
     </div>
   </div>
 

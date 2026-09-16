@@ -1,10 +1,10 @@
 try{process.loadEnvFile();}catch(e){if(e.code!=='ENOENT')throw e;}
 const express=require('express');const fs=require('fs');const path=require('path');const crypto=require('crypto');
 // Public catalog search script contains no account data.
-const app=express();app.use(express.json());app.use((req,res,next)=>{if(req.path.startsWith('/api/'))return next();if(req.path.startsWith('/images/')||['/','/index.html','/admin.html','/payment.html','/script.js','/styles.css','/stock-sync.js','/profile-client.js','/admin-orders.js','/checkout.js','/catalog-search.js','/shop-verification-JDmGLZyo2Q.txt'].includes(req.path))return express.static(__dirname)(req,res,next);res.sendStatus(404);});
+const app=express();app.use(express.json());app.use((req,res,next)=>{if(req.path.startsWith('/api/'))return next();if(req.path.startsWith('/images/')||['/','/index.html','/admin.html','/payment.html','/script.js','/styles.css','/stock-sync.js','/profile-client.js','/checkout.js','/catalog-search.js','/shop-verification-JDmGLZyo2Q.txt'].includes(req.path))return express.static(__dirname)(req,res,next);res.sendStatus(404);});
 const file=process.env.DATA_FILE||path.join(__dirname,'data.json');
 const seed=JSON.parse(fs.readFileSync(path.join(__dirname,'data.json'),'utf8'));
-let db=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{products:seed.products,codes:[],orders:[],promocodes:[],users:{},stockInitialized:true};
+let db=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{products:seed.products,codes:[],orders:[],users:{},stockInitialized:true};
 let store;let writes=Promise.resolve();
 const save=()=>{const raw=JSON.stringify(db);writes=writes.then(()=>store.write(raw));writes.catch(()=>{});return writes;};
 const transaction=task=>store.run(async()=>{writes=Promise.resolve();const result=await task();await writes;return result;});
@@ -32,5 +32,5 @@ app.post('/api/admin/stock',admin,(req,res)=>{let n=Math.max(0,Number(req.body.q
 
 
 app.use((err,req,res,next)=>{console.error('Request failed:',err.message);if(!res.headersSent)res.status(500).json({error:'Не удалось выполнить действие'});});
-require('./storage').openStorage(db,file).then(async storage=>{store=storage;await transaction(async()=>{const added=require('./catalog-migration').migrate(db);let stockFixed=0;for(const p of db.products){if(!Number.isFinite(p.stock)||p.stock<=0){p.stock=100;if(p.status==='sold_out')p.status='available';stockFixed++;}}if(added||stockFixed){await save();console.log('Catalog updated:',added,'new,',stockFixed,'stock set to 100');}});app.listen(process.env.PORT||3000,()=>{console.log('Platas API ready');if(process.env.DISABLE_WORKERS!=='1')startWorkers(transaction);});}).catch(e=>{console.error('Storage startup failed:',e.message);process.exit(1);});
+require('./storage').openStorage(db,file).then(async storage=>{store=storage;await transaction(async()=>{const migration=require('./catalog-migration');const added=migration.migrate(db);const retired=migration.retire(db);let stockFixed=0;const firstStockPass=!db.stockDefaultsApplied;if(firstStockPass){for(const p of db.products){if(!Number.isFinite(p.stock)||p.stock<=0){p.stock=100;if(p.status==='sold_out')p.status='available';stockFixed++;}}db.stockDefaultsApplied=true;}if(added||retired||firstStockPass){await save();}if(added||retired||stockFixed)console.log('Catalog updated:',added,'new,',retired,'retired,',stockFixed,'stock set to 100');});app.listen(process.env.PORT||3000,()=>{console.log('Platas API ready');if(process.env.DISABLE_WORKERS!=='1')startWorkers(transaction);});}).catch(e=>{console.error('Storage startup failed:',e.message);process.exit(1);});
 

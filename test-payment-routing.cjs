@@ -36,11 +36,24 @@ const server=app.listen(0,async()=>{
     assert.equal((await order('card','crypto')).status,409);
     assert.equal((await api(`/api/payments/${crypto.data.id}/demo?token=${crypto.data.paymentToken}`,{})).status,409);
     await workers.tick();assert.equal(messages.at(-1).reply_markup.inline_keyboard[0][0].url,crypto.data.paymentUrl);
+    // Heleket webhook: sign is in the body, JSON is PHP-encoded (escaped slashes).
+    const sign=data=>require('crypto').createHash('md5').update(Buffer.from(JSON.stringify(data).replace(/\//g,'\\/')).toString('base64')+'test-key').digest('hex');
+    const hook={type:'payment',order_id:crypto.data.id,status:'paid',amount:'100.00',url:'https://pay.example.test/x'};
+    assert.equal((await api('/api/payments/heleket/webhook',{...hook,sign:'0'.repeat(32)})).status,401);
+    assert.equal((await api('/api/payments/heleket/webhook',hook)).status,401);
+    const stockBefore=db.products[0].stock;
+    assert.equal((await api('/api/payments/heleket/webhook',{...hook,sign:sign(hook)})).status,200);
+    assert.equal(db.orders.find(o=>o.id===crypto.data.id).status,'paid');assert.equal(db.products[0].stock,stockBefore-1);
+    assert.equal((await api('/api/payments/heleket/webhook',{...hook,sign:sign(hook)})).status,200);assert.equal(db.products[0].stock,stockBefore-1);
+    const late=await order('crypto','late');const lateOrder=db.orders.find(o=>o.id===late.data.id);lateOrder.status='cancelled';
+    const lateHook={...hook,order_id:late.data.id,status:'paid_over'};
+    assert.equal((await api('/api/payments/heleket/webhook',{...lateHook,sign:sign(lateHook)})).status,200);
+    assert.equal(lateOrder.status,'paid');assert.equal(lateOrder.paidAfterExpiry,true);
     delete process.env.HELEKET_API_KEY;
     assert.equal((await order('crypto','no-config')).status,503);
     assert.equal((await order('card','no-config-card')).status,201);
     assert.equal((await order('unknown')).status,400);
-    console.log('PASS: crypto-only Heleket, test SBP/card, retries, missing config, Telegram URL, demo isolation');
+    console.log('PASS: crypto-only Heleket, signed webhooks, late crypto payment, test SBP/card, retries, missing config, Telegram URL, demo isolation');
   }catch(e){console.error(e);process.exitCode=1;}
   finally{global.fetch=realFetch;server.close();}
 });

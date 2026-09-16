@@ -9,7 +9,6 @@
   function entries() {
     const rows = [];
     const add = (name, category, img, key, open) => rows.push({name, category, img, open, text:normalize(`${name} ${category} ${aliases[key] || ''}`)});
-    for (const [key, items] of Object.entries(games)) items.forEach((item, i) => add(item.name, 'Игры', item.img, key, () => openProduct(key, i)));
     for (const [key, service] of Object.entries(donateServices)) {
       const category = digitalSubscriptionKeys.includes(key) ? 'Цифровые сервисы' : 'Пополнение';
       add(service.name, category, service.img, key, () => openTopup(key));
@@ -29,7 +28,6 @@
         updateGiftcardLabel(); renderGiftGrid();
       })));
     }
-    subGroups.forEach(group => add(group.title, 'Подписки', group.img, group.key, () => openSubGroup(group.key)));
     return rows;
   }
   function render() {
