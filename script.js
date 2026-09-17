@@ -1,7 +1,24 @@
 /* Включает срабатывание :active на тап пальцем в мобильном Safari/Telegram
    webview — без этого пустого обработчика iOS игнорирует :active на div'ах. */
 document.addEventListener("touchstart", function(){}, true);
-if(window.Telegram?.WebApp){ Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
+/* ---------- Telegram: высота экрана ----------
+   Telegram может показывать мини-приложение не на всю высоту (шторка
+   свёрнута) — тогда нижняя часть страницы оказывается за краем экрана,
+   а вместе с ней нижняя панель и кнопка «Перейти к оплате». Поэтому высоту
+   приложения берём из viewportStableHeight, а не из 100vh. */
+(() => {
+  const tg = window.Telegram?.WebApp;
+  if(!tg) return;
+  tg.ready();
+  tg.expand();
+  if(tg.isVersionAtLeast?.("7.7")) tg.disableVerticalSwipes?.();
+  const applyHeight = () => {
+    const h = tg.viewportStableHeight;
+    if(h && h > 200) document.documentElement.style.setProperty("--app-height", `${h}px`);
+  };
+  applyHeight();
+  tg.onEvent?.("viewportChanged", e => { if(!e || e.isStateStable) applyHeight(); });
+})();
 
 /* ---------- Favorites (избранное) ---------- */
 let favorites = {};
@@ -2081,8 +2098,58 @@ document.querySelectorAll(".list-row[data-catalog]").forEach(row=>{
    сбрасывает стек. */
 let currentView = "view-home";
 let viewStack = [];
-const tgBack = window.Telegram?.WebApp?.BackButton;
-if(tgBack){ tgBack.onClick(()=>goBack()); tgBack.hide(); }
+/* Назад: системная кнопка Telegram (с версии 6.1). В старых клиентах и вне
+   Telegram показываем свою плавающую кнопку. Сначала закрываются открытые
+   подсказки/списки, и только потом происходит переход назад. */
+const tgWebApp = window.Telegram?.WebApp;
+const tgBack = (tgWebApp?.initData && tgWebApp.isVersionAtLeast?.("6.1")) ? tgWebApp.BackButton : null;
+const fallbackBack = tgBack ? null : (() => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "fallback-back";
+  b.setAttribute("aria-label", "Назад");
+  b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  b.hidden = true;
+  document.getElementById("app").appendChild(b);
+  return b;
+})();
+
+function closeTopLayer(){
+  for(const id of ["pkg-info-overlay", "id-help-overlay"]){
+    const el = document.getElementById(id);
+    if(el && el.classList.contains("show")){ el.classList.remove("show"); return true; }
+  }
+  const dropdown = document.getElementById("payment-server-dropdown");
+  if(dropdown && dropdown.classList.contains("open")){ dropdown.classList.remove("open"); return true; }
+  return false;
+}
+
+let backLock = false;
+function handleBack(){
+  if(backLock) return;           // двойное срабатывание одного нажатия
+  backLock = true;
+  setTimeout(()=>{ backLock = false; }, 250);
+  if(closeTopLayer()) return;
+  if(viewStack.length || currentView !== "view-home") goBack();
+  else syncBackButton();
+}
+
+function syncBackButton(){
+  const visible = viewStack.length > 0;
+  if(tgBack){ if(visible) tgBack.show(); else tgBack.hide(); }
+  if(fallbackBack) fallbackBack.hidden = !visible;
+}
+
+if(tgBack){ tgBack.onClick(handleBack); tgBack.hide(); }
+if(fallbackBack) fallbackBack.addEventListener("click", handleBack);
+
+/* Кнопки «Перейти к оплате» живут вне прокручиваемой области, иначе
+   в части WebView они уезжали вместе с контентом и пропадали. Показываются
+   только на своём экране (см. #app[data-view] в styles.css). */
+for(const id of ["payment-buy-btn", "topup-custom-buy-btn"]){
+  const btn = document.getElementById(id);
+  if(btn) document.getElementById("app").appendChild(btn);
+}
 
 function tabNameForView(id){
   const map = {"view-home":"home", "view-fav":"fav", "view-purchases":"purchases", "view-profile":"profile"};
@@ -2124,7 +2191,9 @@ function isCheckoutOnlyView(id){
 }
 
 function syncCheckoutMode(id){
-  document.getElementById("app").classList.toggle("checkout-mode", isCheckoutOnlyView(id));
+  const app = document.getElementById("app");
+  app.classList.toggle("checkout-mode", isCheckoutOnlyView(id));
+  app.dataset.view = id;
 }
 
 /* На страницах "Пользовательское соглашение" и "Политика конфиденциальности"
@@ -2147,7 +2216,7 @@ function showSubView(id){
   syncNavActiveTab(id);
   syncCheckoutMode(id);
   syncLegalMode(id);
-  if(tgBack){ if(viewStack.length) tgBack.show(); else tgBack.hide(); }
+  syncBackButton();
 }
 
 function goBack(){
@@ -2159,12 +2228,12 @@ function goBack(){
   syncNavActiveTab(prev);
   syncCheckoutMode(prev);
   syncLegalMode(prev);
-  if(tgBack){ if(viewStack.length) tgBack.show(); else tgBack.hide(); }
+  syncBackButton();
 }
 
 function hideSubView(){
-  if(tgBack) tgBack.hide();
   viewStack = [];
+  syncBackButton();
   currentView = "view-home";
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById("view-home").classList.add("active");
@@ -2196,6 +2265,7 @@ document.querySelectorAll(".navitem").forEach(item=>{
     document.getElementById("scrollarea").scrollTop = 0;
     syncCheckoutMode("view-"+view);
     syncLegalMode("view-"+view);
+    syncBackButton();
   });
 });
 

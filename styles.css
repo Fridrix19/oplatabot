@@ -16,13 +16,13 @@
     --radius-lg: 20px;
     --radius-md: 14px;
     --radius-sm: 10px;
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px));
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", Roboto, Helvetica, Arial, sans-serif;
     height:100%; overflow:hidden;}
-  #app{max-width:480px; margin:0 auto; height:100vh; height:100dvh; position:relative; background:var(--bg); display:flex; flex-direction:column;}
+  #app{max-width:480px; margin:0 auto; height:100vh; height:100dvh; height:var(--app-height, 100dvh); position:relative; overflow:hidden; background:var(--bg); display:flex; flex-direction:column;}
 
   /* ---------- Scroll body ---------- */
   .body-scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:calc(84px + var(--safe-bottom));}
@@ -731,3 +731,14 @@
 
 /* Без шапки страницы: отступ сверху, когда карточка сервиса скрыта (Telegram). */
 #giftcard-info-card[style*="display: none"] + #giftcard-country-tabs{margin-top:14px !important;}
+
+/* Кнопки оплаты вынесены из прокрутки в #app: видны только на своём экране. */
+#app > #payment-buy-btn, #app > #topup-custom-buy-btn{display:none;}
+#app.checkout-mode[data-view="view-payment"] > #payment-buy-btn,
+#app.checkout-mode[data-view="view-topup"] > #topup-custom-buy-btn{display:block;}
+#app.checkout-mode .body-scroll{padding-bottom:calc(76px + var(--safe-bottom));}
+
+/* Запасная кнопка «Назад» для клиентов без системной кнопки Telegram. */
+.fallback-back{position:absolute; top:10px; left:10px; z-index:120; width:38px; height:38px; border-radius:50%; border:1px solid var(--stroke); background:rgba(18,26,44,.92); color:var(--text); display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer;}
+.fallback-back[hidden]{display:none;}
+.fallback-back svg{width:20px; height:20px;}
