@@ -19,6 +19,7 @@
       })));
     }
     for (const [key, catalog] of Object.entries(giftCatalogs)) {
+      if(key==='tgstars')continue;
       add(catalog.title, 'Карты и подписки', catalog.img, key, () => openGiftCards(key));
       const countries = catalog.countries || [{name:'', code:null, items:catalog.items || []}];
       countries.forEach(country => (country.items || []).forEach(item => add(item.name || `${catalog.title} ${item.amount}`, `${catalog.title} · ${country.name}`, item.img || catalog.img, key, () => {
