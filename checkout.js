@@ -1,7 +1,7 @@
 (() => {
   let busy=false,lastKey='',lastSignature='';
   const value=id=>document.getElementById(id)?.value.trim()||'';
-  window.checkoutOrder=async(items,totalLabel,email)=>{
+  window.checkoutOrder=async(items,totalLabel,email,payMethod)=>{
     if(busy)return;
     if(!window.Telegram?.WebApp?.initData){showToast('Откройте магазин в Telegram');return;}
     busy=true;
@@ -16,7 +16,7 @@
       if(document.getElementById('topup-custom-login')?.offsetParent){playerId=value('topup-custom-login');catalogName=donateServices[currentTopup].name;const v=getCurrentTopupVariant();name=catalogName+' — '+value('topup-custom-amount')+' '+(v?.currency||'');}
       if(name.startsWith('Telegram Stars ')){playerId=value('tgstars-username-input');catalogName=name=getTgStarsItems()[tgStarsSelectedIdx].name;}
       if(name.startsWith('Telegram Premium ')){playerId=value('tgprem-username-input');catalogName=name=getTgPremItems()[tgPremSelectedIdx].name;}
-      const payload={name,catalogName,amount:priceToNumber(totalLabel),playerId,zoneId,gameServer,paymentMethod:(currentView==='view-payment'&&typeof paymentPayMethod!=='undefined')?paymentPayMethod:'test'};
+      const payload={name,catalogName,amount:priceToNumber(totalLabel),playerId,zoneId,gameServer,email:String(email||'').trim(),paymentMethod:payMethod||((currentView==='view-payment'&&typeof paymentPayMethod!=='undefined')?paymentPayMethod:'sbp')};
       const signature=JSON.stringify(payload);if(signature!==lastSignature){lastKey=crypto.randomUUID();lastSignature=signature;}
       const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':Telegram.WebApp.initData},body:JSON.stringify({...payload,checkoutKey:lastKey})});
       const order=await r.json();if(!r.ok)throw new Error(order.error||'Не удалось создать заказ');

@@ -1,4 +1,5 @@
 const assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawn}=require('node:child_process');
+process.env.ALLOW_TEST_PAYMENTS='1';
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'platas-test-')),file=path.join(dir,'store.json'),token='test-token';
 const initial={products:[{id:'card',name:'Карта PS Store',category:'PlayStation',price:499,stock:100,status:'available'},{id:'pubg',name:'PUBG Mobile — 60 UC',category:'PUBG Mobile',price:140,stock:100,status:'available'}],orders:[],codes:[],users:{},stockInitialized:true};
 fs.writeFileSync(file,JSON.stringify(initial));

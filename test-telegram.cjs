@@ -1,4 +1,5 @@
 const express=require('express'),assert=require('node:assert/strict');
+process.env.ALLOW_TEST_PAYMENTS='1';
 const {attach}=require('./fulfillment');
 process.env.BOT_TOKEN='test';process.env.PUBLIC_URL='https://example.test';process.env.BOT_USERNAME='example_bot';
 const app=express();app.use(express.json());app.use((req,res,next)=>{req.telegramUser={id:'1'};next();});

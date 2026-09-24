@@ -1,4 +1,5 @@
 const assert=require('node:assert/strict'),express=require('express');
+process.env.ALLOW_TEST_PAYMENTS='1';
 const entries=require('./catalog-meta.json'),{migrate,retire}=require('./catalog-migration');
 const db={products:structuredClone(require('./data.json').products),orders:[],users:{'test':{favorites:{saved:{name:'Old favorite'}}}}};
 const before=JSON.stringify({products:db.products,users:db.users});const existing=db.products.length;

@@ -82,7 +82,7 @@ function updateFavBadge(){
 
 function renderFavoritesView(){
   const view = document.getElementById("view-fav");
-  const ids = Object.keys(favorites).filter(id=>!id.includes('tgstars')&&!/^Telegram\b/i.test(favorites[id]?.name||''));
+  const ids = Object.keys(favorites);
 
   if(ids.length === 0){
     view.innerHTML = `<div class="empty">
@@ -354,7 +354,7 @@ items:[
 let orders = [];
 let orderIdSeq = 1001;
 
-function createOrder(items,totalLabel,email){return window.checkoutOrder(items,totalLabel,email);}
+function createOrder(items,totalLabel,email,payMethod){return window.checkoutOrder(items,totalLabel,email,payMethod);}
 
 function formatOrderDate(d){
   const dd = String(d.getDate()).padStart(2,"0");
@@ -1241,7 +1241,8 @@ document.getElementById("topup-custom-buy-btn").addEventListener("click", ()=>{
       qty:1, grad:s.grad, img:s.img || null, needsCode:false
     }],
     `${formatPrice(total)} ₽`,
-    ""
+    "",
+    document.querySelector("#topup-custom-pay-methods .pay-method.selected")?.dataset.pay || "sbp"
   );
 
 
@@ -1657,7 +1658,6 @@ function updateGiftcardLabel(){
 }
 
 function openGiftCards(key){
-  if(key==='tgstars'){showToast('Категория временно недоступна');return;}
   const cat = giftCatalogs[key];
 
   // Карточка с логотипом/названием/описанием сервиса — как у игрового доната.
@@ -1907,7 +1907,7 @@ function validateTgStarsUsername(){
   return ok;
 }
 
-function completeTgStarsPurchase(){
+function completeTgStarsPurchase(payMethod){
   if(!validateTgStarsUsername()) return;
   const item = getTgStarsItems()[tgStarsSelectedIdx];
   const {total: finalPrice} = getTgStarsFinalPrice();
@@ -1915,13 +1915,14 @@ function completeTgStarsPurchase(){
   createOrder(
     [{name:`Telegram Stars ${item.amount} ⭐ · ${username}`, price:`${formatPrice(finalPrice)} ₽`, qty:1, grad:"linear-gradient(160deg,#2AABEE,#1178B3)", needsCode:false}],
     `${formatPrice(finalPrice)} ₽`,
-    null
+    null,
+    payMethod || "sbp"
   );
 
 
 }
 
-document.getElementById("tgstars-sbp-btn").addEventListener("click", ()=> completeTgStarsPurchase());
+document.getElementById("tgstars-sbp-btn").addEventListener("click", ()=> completeTgStarsPurchase("sbp"));
 document.getElementById("tgstars-other-btn").addEventListener("click", ()=>{
   if(!validateTgStarsUsername()) return;
   showSubView("view-tg-other");
@@ -2019,7 +2020,7 @@ function validateTgPremUsername(){
   return ok;
 }
 
-function completeTgPremPurchase(){
+function completeTgPremPurchase(payMethod){
   if(!validateTgPremUsername()) return;
   const item = getTgPremItems()[tgPremSelectedIdx];
   const {total: finalPrice} = getTgPremFinalPrice();
@@ -2027,13 +2028,14 @@ function completeTgPremPurchase(){
   createOrder(
     [{name:`Telegram Premium ${item.amount} · ${username}`, price:`${formatPrice(finalPrice)} ₽`, qty:1, grad:"linear-gradient(160deg,#8B6CFF,#3A1FB0)", needsCode:false}],
     `${formatPrice(finalPrice)} ₽`,
-    null
+    null,
+    payMethod || "sbp"
   );
 
 
 }
 
-document.getElementById("tgprem-sbp-btn").addEventListener("click", ()=> completeTgPremPurchase());
+document.getElementById("tgprem-sbp-btn").addEventListener("click", ()=> completeTgPremPurchase("sbp"));
 document.getElementById("tgprem-other-btn").addEventListener("click", ()=>{
   if(!validateTgPremUsername()) return;
   showSubView("view-tg-other");
@@ -2042,10 +2044,10 @@ document.getElementById("tgprem-other-btn").addEventListener("click", ()=>{
 /* Экран "Другие способы оплаты" общий для Stars и Premium — определяем,
    какую покупку завершать, по текущему режиму вкладки. */
 document.getElementById("tgother-card").addEventListener("click", ()=>{
-  if(isTgPremMode()) completeTgPremPurchase(); else completeTgStarsPurchase();
+  if(isTgPremMode()) completeTgPremPurchase("card"); else completeTgStarsPurchase("card");
 });
 document.getElementById("tgother-crypto").addEventListener("click", ()=>{
-  if(isTgPremMode()) completeTgPremPurchase(); else completeTgStarsPurchase();
+  if(isTgPremMode()) completeTgPremPurchase("crypto"); else completeTgStarsPurchase("crypto");
 });
 document.getElementById("tgother-back").addEventListener("click", ()=> goBack());
 
