@@ -2058,8 +2058,6 @@ document.getElementById("tgother-back").addEventListener("click", ()=> goBack())
    автоматически возвращает туда, откуда был совершён переход (корзина,
    профиль, страница оплаты и т.д.) — специальная логика по экранам не нужна,
    т.к. viewStack уже хранит историю переходов. */
-document.getElementById("agree-back").addEventListener("click", ()=> goBack());
-document.getElementById("privacy-back").addEventListener("click", ()=> goBack());
 
 document.getElementById("terms-row").addEventListener("click", ()=> showSubView("view-agree"));
 document.getElementById("privacy-row").addEventListener("click", ()=> showSubView("view-privacy"));

@@ -10,8 +10,13 @@ function attach(app,db,save,admin,transport){
   // После оплаты возвращаем покупателя в чат с ботом: там лежит заказ, туда придёт код.
   // Ссылка без ?start=, чтобы бот не получал лишнее сообщение /start.
   const botChat=()=>process.env.BOT_USERNAME?`https://t.me/${process.env.BOT_USERNAME.replace(/^@/,'')}`:purchases();
+  // "Discord Nitro" + "Discord Nitro — Nitro Basic" давало двойное название.
+  function title(o){
+    const name=String(o.productName||'Товар'), category=String(o.category||'').trim();
+    return (!category||name===category||name.startsWith(category+' —')||name.startsWith(category+' -')) ? name : `${category} — ${name}`;
+  }
   function text(o){
-    const details=`${html(o.category||'Товар')} — ${html(o.productName)}\nЗаказ: ${html(o.id)}${o.playerId?'\nID: '+html(o.playerId):''}${o.zoneId?'\nЗона: '+html(o.zoneId):''}${o.gameServer?'\nСервер: '+html(o.gameServer):''}\nСумма: ${html(o.amount)} ₽`;
+    const details=`${html(title(o))}\nЗаказ: ${html(o.id)}${o.playerId?'\nID: '+html(o.playerId):''}${o.zoneId?'\nЗона: '+html(o.zoneId):''}${o.gameServer?'\nСервер: '+html(o.gameServer):''}\nСумма: ${html(o.amount)} ₽`;
     if(o.status==='paid')return details+'\n\n'+(o.fulfillmentType==='topup'?'Валюта будет выдана в течение 5–10 минут.':'Код придёт сюда в чат и в раздел «Мои покупки» в течение 5 минут.');
     if(o.status==='delivered')return details+'\n\n'+(o.fulfillmentType==='topup'?'✅ УСПЕШНО ПОПОЛНЕНО':`Ваш код: <tg-spoiler>${html(o.code)}</tg-spoiler>`)+'\nУдачной игры!';
     if(o.status==='cancelled'||o.status==='expired')return details+'\n\nЗаказ отменён: время оплаты истекло.';
@@ -84,6 +89,15 @@ function attach(app,db,save,admin,transport){
       o.notifiedStatus=state;await save();
     }catch(e){console.error('Order notification failed:',e.message);}finally{locks.delete(o.id);}
   }
+  // Короткий номер заказа: его диктуют оператору и ищут в переписке.
+  const ORDER_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function orderId(){
+    for(let attempt=0;attempt<50;attempt++){
+      const id='ORD-'+Array.from(crypto.randomBytes(6)).map(b=>ORDER_ALPHABET[b%ORDER_ALPHABET.length]).join('');
+      if(!db.orders.some(o=>o.id===id))return id;
+    }
+    return 'ORD-'+crypto.randomUUID();
+  }
   function expire(o){if(expired(o)){o.status='cancelled';o.cancelledAt=new Date().toISOString();return true;}return false;}
   app.post('/api/orders',async(req,res,next)=>{try{
     const name=String(req.body.name||'').slice(0,500),catalogName=String(req.body.catalogName||name);
@@ -112,7 +126,7 @@ function attach(app,db,save,admin,transport){
     }
     const amount=Number(req.body.amount); // Existing demo catalog has incomplete variant prices.
     if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Некорректная сумма'});
-    const id='ORD-'+crypto.randomUUID();
+    const id=orderId();
     const o={id,userId:req.telegramUser.id,productId:p.id,productName:name||p.name,category:metadata?.category||p.category,amount,status:'awaiting_payment',fulfillmentType,playerId,zoneId,gameServer,checkoutKey:key,email:email||null,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+600000).toISOString(),paymentToken:crypto.randomBytes(24).toString('hex')};
     o.paymentMethod=paymentMethod;
     o.paymentUrl='/api/payments/'+id+'?token='+o.paymentToken;db.orders.push(o);await save();

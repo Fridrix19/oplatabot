@@ -56,8 +56,12 @@ function attach(db, save, transport, customerTransport) {
   const send = text => api('sendMessage', {chat_id:admin(), text});
   const findOrder = messageId => db.orders.find(o => o.operatorMessageId === messageId || o.receiptPromptMessageId === messageId);
 
+  function title(o) {
+    const name = String(o.productName || 'Товар'), category = String(o.category || '').trim();
+    return (!category || name === category || name.startsWith(category + ' —') || name.startsWith(category + ' -')) ? name : `${category} — ${name}`;
+  }
   function card(o) {
-    return `${o.status === 'paid' ? '🟢 Оплачен — нужно выдать' : '✅ Выполнен'}\nЗаказ: ${o.id}\n${o.category || 'Товар'} — ${o.productName || 'Товар'}\nСумма: ${o.amount} ₽\nПокупатель: ${o.userId}${o.playerId ? '\nID / логин: '+o.playerId : ''}${o.zoneId ? '\nЗона: '+o.zoneId : ''}${o.gameServer ? '\nСервер: '+o.gameServer : ''}${o.status === 'paid' ? (o.fulfillmentType === 'topup' ? '\nПосле пополнения нажмите кнопку ниже.' : '\nОтправьте код ответом на это сообщение (функция «Ответить»).') : ''}`;
+    return `${o.status === 'paid' ? '🟢 Оплачен — нужно выдать' : '✅ Выполнен'}\nЗаказ: ${o.id}\n${title(o)}\nСумма: ${o.amount} ₽\nПокупатель: ${o.userId}${o.playerId ? '\nID / логин: '+o.playerId : ''}${o.zoneId ? '\nЗона: '+o.zoneId : ''}${o.gameServer ? '\nСервер: '+o.gameServer : ''}${o.status === 'paid' ? (o.fulfillmentType === 'topup' ? '\nПосле пополнения нажмите кнопку ниже.' : '\nОтправьте код ответом на это сообщение (функция «Ответить»).') : ''}`;
   }
 
   async function tick() {

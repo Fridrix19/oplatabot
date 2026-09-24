@@ -383,10 +383,10 @@
      place — a solid full-width bar flush with the bottom edge ---------- */
   #app.checkout-mode .bottomnav{display:none;}
   #app.checkout-mode #payment-buy-btn{
-    position:absolute; left:0; right:0; bottom:0; z-index:100;
-    margin:0; width:100%; border-radius:0;
-    padding:17px 16px calc(17px + var(--safe-bottom));
-    box-shadow:0 -8px 24px -8px rgba(0,0,0,.35);
+    position:absolute; left:12px; right:12px; bottom:calc(10px + var(--safe-bottom)); z-index:100;
+    margin:0; width:auto; border-radius:18px;
+    padding:17px 16px; font-size:17.5px;
+    box-shadow:0 8px 24px -10px rgba(0,0,0,.55);
     letter-spacing:.1px;
   }
   #app.checkout-mode #payment-buy-btn:active{transform:none; box-shadow:0 -6px 16px -8px rgba(0,0,0,.35);}
@@ -395,10 +395,10 @@
      место, что и страница оплаты — кнопка "Перейти к оплате" становится
      сплошной полосой внизу вместо таб-бара (см. checkoutOnlyViews в JS). */
   #app.checkout-mode #topup-custom-buy-btn{
-    position:absolute; left:0; right:0; bottom:0; z-index:100;
-    margin:0; width:100%; border-radius:0;
-    padding:17px 16px calc(17px + var(--safe-bottom));
-    box-shadow:0 -8px 24px -8px rgba(0,0,0,.35);
+    position:absolute; left:12px; right:12px; bottom:calc(10px + var(--safe-bottom)); z-index:100;
+    margin:0; width:auto; border-radius:18px;
+    padding:17px 16px; font-size:17.5px;
+    box-shadow:0 8px 24px -10px rgba(0,0,0,.55);
     letter-spacing:.1px;
   }
   #app.checkout-mode #topup-custom-buy-btn:active{transform:none; box-shadow:0 -6px 16px -8px rgba(0,0,0,.35);}
@@ -492,13 +492,14 @@
   .id-help-btn:active{background:var(--accent-a); color:#fff;}
 
   .id-help-overlay{
-    display:none; position:fixed; inset:0; z-index:1200; background:rgba(4,6,12,.72);
-    align-items:flex-end; justify-content:center; padding:0 0 var(--safe-bottom);
+    display:none; position:fixed; left:0; right:0; top:0; height:var(--app-height, 100dvh);
+    z-index:1200; background:rgba(4,6,12,.72);
+    align-items:flex-end; justify-content:center; padding:0;
   }
   .id-help-overlay.show{display:flex;}
   .id-help-modal{
     width:100%; max-width:480px; background:var(--card); border-radius:24px 24px 0 0;
-    padding:16px 16px calc(16px + var(--safe-bottom)); box-sizing:border-box;
+    padding:16px 16px calc(10px + var(--safe-bottom)); box-sizing:border-box;
   }
   .id-help-image{
     width:100%; aspect-ratio:16/10; border-radius:16px; background:var(--card-2) center/cover no-repeat;
@@ -512,7 +513,8 @@
 
   /* ---------- Package info modal (состав пакета, по центру экрана) ---------- */
   .pkg-info-overlay{
-    display:none; position:fixed; inset:0; z-index:1300; background:rgba(4,6,12,.72);
+    display:none; position:fixed; left:0; right:0; top:0; height:var(--app-height, 100dvh);
+    z-index:1300; background:rgba(4,6,12,.72);
     align-items:center; justify-content:center; padding:24px; box-sizing:border-box;
     backdrop-filter:blur(2px);
   }
@@ -736,9 +738,12 @@
 #app > #payment-buy-btn, #app > #topup-custom-buy-btn{display:none;}
 #app.checkout-mode[data-view="view-payment"] > #payment-buy-btn,
 #app.checkout-mode[data-view="view-topup"] > #topup-custom-buy-btn{display:block;}
-#app.checkout-mode .body-scroll{padding-bottom:calc(76px + var(--safe-bottom));}
+#app.checkout-mode .body-scroll{padding-bottom:calc(92px + var(--safe-bottom));}
 
 /* Запасная кнопка «Назад» для клиентов без системной кнопки Telegram. */
 .fallback-back{position:absolute; top:10px; left:10px; z-index:120; width:38px; height:38px; border-radius:50%; border:1px solid var(--stroke); background:rgba(18,26,44,.92); color:var(--text); display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer;}
 .fallback-back[hidden]{display:none;}
 .fallback-back svg{width:20px; height:20px;}
+
+/* На юридических страницах свой заголовок уже есть в тексте, шапку с «Назад» убрали. */
+#view-agree > .legal-title:first-child, #view-privacy > .legal-title:first-child{margin-top:14px;}

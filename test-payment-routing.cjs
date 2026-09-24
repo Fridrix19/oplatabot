@@ -45,7 +45,8 @@ const server=app.listen(0,async()=>{
   try{
     // Super Banking: СБП и карта идут в свои проекты, ссылка приходит от провайдера.
     const sbp=await order('sbp',undefined,{email:'buyer@example.test'});
-    assert.equal(sbp.status,201);assert.equal(sbp.data.paymentUrl,'https://securepayment.superbanking.ru/1');
+    assert.equal(sbp.status,201);
+    assert.match(sbp.data.id,/^ORD-[A-Z2-9]{6}$/); // короткий номер заказаassert.equal(sbp.data.paymentUrl,'https://securepayment.superbanking.ru/1');
     assert.equal(createdLinks[0].projectId,'project-sbp');assert.equal(createdLinks[0].email,'buyer@example.test');
     assert.equal(createdLinks[0].items[0].price,100);assert.equal(createdLinks[0].items[0].count,1);
     // После оплаты покупатель возвращается в чат с ботом, а не на страницу магазина.
