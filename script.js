@@ -82,7 +82,7 @@ function updateFavBadge(){
 
 function renderFavoritesView(){
   const view = document.getElementById("view-fav");
-  const ids = Object.keys(favorites);
+  const ids = Object.keys(favorites).filter(id=>!id.includes('tgstars')&&!/^Telegram\b/i.test(favorites[id]?.name||''));
 
   if(ids.length === 0){
     view.innerHTML = `<div class="empty">
@@ -1658,6 +1658,7 @@ function updateGiftcardLabel(){
 }
 
 function openGiftCards(key){
+  if(key==='tgstars'){showToast('Категория временно недоступна');return;}
   const cat = giftCatalogs[key];
 
   // Карточка с логотипом/названием/описанием сервиса — как у игрового доната.

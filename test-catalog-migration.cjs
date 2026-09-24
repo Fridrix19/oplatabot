@@ -14,7 +14,9 @@ for(const p of db.products){p.stock=100;p.status='available';}
 const app=express();app.use(express.json());app.use((req,res,next)=>{req.telegramUser={id:'test'};next();});
 require('./fulfillment').attach(app,db,async()=>{},(req,res,next)=>next());
 const server=app.listen(0,async()=>{try{
+const hidden=require('./catalog-visibility');
  for(const [i,entry] of entries.entries()){
+  if(hidden({name:entry.name,category:entry.category}))continue; // временно скрытая категория
   const response=await fetch(`http://localhost:${server.address().port}/api/orders`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:entry.name,catalogName:entry.name,amount:entry.price||100,playerId:entry.fulfillmentType==='topup'?'123456':'',checkoutKey:'catalog-'+i})});
   const order=await response.json();assert.equal(response.status,201,entry.name+': '+JSON.stringify(order));assert.equal(order.fulfillmentType,entry.fulfillmentType,entry.name);
  }

@@ -89,7 +89,7 @@ function attach(app,db,save,admin,transport){
     let p=db.products.find(p=>p.id===req.body.productId)||db.products.find(p=>norm(p.name)===norm(catalogName));
     if(!p&&metadata?.shortName)p=db.products.find(p=>norm(p.name)===norm(metadata.shortName));
     if(!p&&name.includes(' — ')){const short=name.split(' — ').slice(1).join(' — ');const matches=db.products.filter(p=>norm(p.name)===norm(short));if(matches.length===1)p=matches[0];}
-    if(!p)return res.status(404).json({error:'Вариант товара не найден в каталоге'});
+    if(!p||require('./catalog-visibility')(p))return res.status(404).json({error:'Вариант товара не найден в каталоге'});
     if(p.stock<=0||p.status!=='available')return res.status(409).json({error:'Нет в наличии'});
     const playerId=String(req.body.playerId||'').trim().slice(0,120),zoneId=String(req.body.zoneId||'').trim().slice(0,120),gameServer=String(req.body.gameServer||'').trim().slice(0,120);
     const fulfillmentType=metadata?.fulfillmentType||(playerId?'topup':'code');
