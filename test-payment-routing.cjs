@@ -12,6 +12,8 @@ process.env.PUBLIC_URL='https://example.test';
 process.env.BOT_TOKEN='test-bot';
 process.env.BOT_USERNAME='@platas_bot';
 const realFetch=global.fetch;
+// Ответ платёжной системы читается через text(), поэтому мок отдаёт и text(), и json().
+const json=payload=>({ok:true,status:200,text:async()=>JSON.stringify(payload),json:async()=>payload});
 let invoices=0,links=0;
 const createdLinks=[];let payStatus=0,payAmount=100;
 global.fetch=async(url,options)=>{
@@ -24,10 +26,11 @@ global.fetch=async(url,options)=>{
     const body=JSON.parse(options.body);
     assert.equal(options.headers['x-token-user-api'],'sb-token');
     createdLinks.push(body);
-    return {ok:true,json:async()=>({result:true,data:{payment:{paymentUrl:'https://securepayment.superbanking.ru/'+links,linkId:'link-'+links,orderNumber:'N'+links,amount:body.items[0].price}}})};
+    const payload={result:true,data:{payment:{paymentUrl:'https://securepayment.superbanking.ru/'+links,linkId:'link-'+links,orderNumber:'N'+links,amount:body.items[0].price}}};
+    return json(payload);
   }
   if(String(url).startsWith('https://api.superbanking.ru/cabinet/payment/statusPay')){
-    return {ok:true,json:async()=>({result:true,data:{payment:{status:payStatus,amount:payAmount,typeRequisite:1}}})};
+    return json({result:true,data:{payment:{status:payStatus,amount:payAmount,typeRequisite:1}}});
   }
   return realFetch(url,options);
 };

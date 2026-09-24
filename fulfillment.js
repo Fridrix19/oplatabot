@@ -46,17 +46,35 @@ function attach(app,db,save,admin,transport){
   const sbProject=method=>((method==='sbp'&&(process.env.SUPERBANKING_PROJECT_ID_SBP||'').trim())||(process.env.SUPERBANKING_PROJECT_ID||'').trim());
   const sbReady=method=>Boolean(sbToken()&&sbCabinet()&&sbProject(method));
   const sbPaidStatuses=()=>String(process.env.SUPERBANKING_PAID_STATUSES||'1').split(',').map(v=>v.trim()).filter(Boolean);
+  // Ошибки Super Banking приходят и строкой, и объектом — разворачиваем в читаемый текст.
+  function describeError(value,depth=0){
+    if(value==null)return '';
+    if(typeof value==='string')return value;
+    if(Array.isArray(value))return value.map(v=>describeError(v,depth+1)).filter(Boolean).join('; ');
+    if(typeof value==='object'){
+      if(depth>3)return '';
+      if(typeof value.message==='string')return value.message;
+      if(typeof value.error==='string')return value.error;
+      return Object.entries(value).map(([k,v])=>{const text=describeError(v,depth+1);return text?`${k}: ${text}`:k;}).filter(Boolean).join('; ');
+    }
+    return String(value);
+  }
   async function superbankingApi(method,body){
     const r=await fetch(`https://api.superbanking.ru/cabinet/payment/${method}?v=1.0.1`,{method:'POST',headers:{'x-token-user-api':sbToken(),'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});
-    const data=await r.json().catch(()=>null);
-    if(!r.ok||!data?.result)throw new Error(`Super Banking: ${data?.error||data?.message||'ошибка '+r.status}`);
+    const raw=await r.text();
+    let data=null; try{data=JSON.parse(raw);}catch(e){}
+    if(!r.ok||!data?.result){
+      console.error(`Super Banking ${method} HTTP ${r.status}:`,raw.slice(0,800));
+      const reason=describeError(data?.error??data?.errors??data?.message??data?.data)||`HTTP ${r.status}`;
+      throw new Error(`Super Banking: ${reason}`);
+    }
     return data.data;
   }
   // Ссылка на оплату создаётся вместе с заказом: покупатель выбирает СБП или карту на странице Super Banking.
   async function superbankingLink(o){
     const data=await superbankingApi('createLink',{
       cabinetId:sbCabinet(),projectId:sbProject(o.paymentMethod),
-      successUrl:botChat(),failUrl:botChat(),
+      successUrl:botChat(),failUrl:botChat(),useHold:false,
       ...(o.email?{email:o.email}:{}),
       items:[{title:String(o.productName||'Товар').slice(0,255),price:Number(o.amount),count:1,
         type:Number(process.env.SUPERBANKING_ITEM_TYPE||1),vat:Number(process.env.SUPERBANKING_VAT||0),
