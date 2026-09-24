@@ -7,6 +7,9 @@ function attach(app,db,save,admin,transport){
   const pending=o=>['pending','awaiting_payment'].includes(o.status);
   const expired=o=>pending(o)&&Date.parse(o.expiresAt)<=Date.now();
   const purchases=()=>`${base()}/?page=purchases`;
+  // После оплаты возвращаем покупателя в чат с ботом: там лежит заказ, туда придёт код.
+  // Ссылка без ?start=, чтобы бот не получал лишнее сообщение /start.
+  const botChat=()=>process.env.BOT_USERNAME?`https://t.me/${process.env.BOT_USERNAME.replace(/^@/,'')}`:purchases();
   function text(o){
     const details=`${html(o.category||'Товар')} — ${html(o.productName)}\nЗаказ: ${html(o.id)}${o.playerId?'\nID: '+html(o.playerId):''}${o.zoneId?'\nЗона: '+html(o.zoneId):''}${o.gameServer?'\nСервер: '+html(o.gameServer):''}\nСумма: ${html(o.amount)} ₽`;
     if(o.status==='paid')return details+'\n\n'+(o.fulfillmentType==='topup'?'Валюта будет выдана в течение 5–10 минут.':'Код придёт сюда в чат и в раздел «Мои покупки» в течение 5 минут.');
@@ -28,7 +31,7 @@ function attach(app,db,save,admin,transport){
   async function heleketInvoice(o){
     const merchant=(process.env.HELEKET_MERCHANT_ID||'').trim(), key=(process.env.HELEKET_API_KEY||'').trim();
     if(!merchant||!key)return null;
-    const body={amount:String(o.amount),currency:process.env.HELEKET_CURRENCY||'RUB',order_id:o.id,url_callback:(process.env.HELEKET_CALLBACK_URL||`${base()}/api/payments/heleket/webhook`),url_return:base()+'/?page=purchases',url_success:base()+'/?page=purchases',lifetime:600};
+    const body={amount:String(o.amount),currency:process.env.HELEKET_CURRENCY||'RUB',order_id:o.id,url_callback:(process.env.HELEKET_CALLBACK_URL||`${base()}/api/payments/heleket/webhook`),url_return:botChat(),url_success:botChat(),lifetime:600};
     const sign=crypto.createHash('md5').update(Buffer.from(JSON.stringify(body)).toString('base64')+key).digest('hex');
     const r=await fetch('https://api.heleket.com/v1/payment',{method:'POST',headers:{merchant,sign,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const d=await r.json();if(!r.ok||d.state===false)throw new Error(d.message||'Heleket: не удалось создать счёт');return d.result?.url||d.url;
   }
@@ -48,7 +51,7 @@ function attach(app,db,save,admin,transport){
   async function superbankingLink(o){
     const data=await superbankingApi('createLink',{
       cabinetId:sbCabinet(),projectId:sbProject(o.paymentMethod),
-      successUrl:purchases(),failUrl:purchases(),
+      successUrl:botChat(),failUrl:botChat(),
       ...(o.email?{email:o.email}:{}),
       items:[{title:String(o.productName||'Товар').slice(0,255),price:Number(o.amount),count:1,
         type:Number(process.env.SUPERBANKING_ITEM_TYPE||1),vat:Number(process.env.SUPERBANKING_VAT||0),

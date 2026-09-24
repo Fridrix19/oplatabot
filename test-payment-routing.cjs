@@ -10,6 +10,7 @@ process.env.SUPERBANKING_PROJECT_ID_SBP='project-sbp';
 process.env.ALLOW_TEST_PAYMENTS='1';
 process.env.PUBLIC_URL='https://example.test';
 process.env.BOT_TOKEN='test-bot';
+process.env.BOT_USERNAME='@platas_bot';
 const realFetch=global.fetch;
 let invoices=0,links=0;
 const createdLinks=[];let payStatus=0,payAmount=100;
@@ -47,6 +48,8 @@ const server=app.listen(0,async()=>{
     assert.equal(sbp.status,201);assert.equal(sbp.data.paymentUrl,'https://securepayment.superbanking.ru/1');
     assert.equal(createdLinks[0].projectId,'project-sbp');assert.equal(createdLinks[0].email,'buyer@example.test');
     assert.equal(createdLinks[0].items[0].price,100);assert.equal(createdLinks[0].items[0].count,1);
+    // После оплаты покупатель возвращается в чат с ботом, а не на страницу магазина.
+    assert.equal(createdLinks[0].successUrl,'https://t.me/platas_bot');assert.equal(createdLinks[0].failUrl,'https://t.me/platas_bot');
     const card=await order('card');
     assert.equal(createdLinks[1].projectId,'project-card');assert.equal(card.data.paymentUrl,'https://securepayment.superbanking.ru/2');
     assert.equal((await order('card')).data.id,card.data.id);assert.equal(links,2); // повтор не создаёт вторую ссылку
