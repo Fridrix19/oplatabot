@@ -4,7 +4,7 @@ const {attach}=require('./fulfillment');
 process.env.BOT_TOKEN='test';process.env.PUBLIC_URL='https://example.test';process.env.BOT_USERNAME='example_bot';
 const app=express();app.use(express.json());app.use((req,res,next)=>{req.telegramUser={id:'1'};next();});
 const db={products:[{id:'p',name:'Карта',category:'Карты',stock:10,status:'available'},{id:'d',name:'Discord Nitro — Nitro Basic',category:'Discord Nitro',stock:10,status:'available'}],orders:[]};const calls=[];let updates=[];
-const workers=attach(app,db,async()=>{},(req,res,next)=>next(),async(method,args)=>{calls.push({method,args});return method==='getUpdates'?updates:{message_id:123};});
+const workers=attach(app,db,async()=>{},(req,res,next)=>next(),async(method,args)=>{calls.push({method,args});if(method==='getUpdates'&&updates==='conflict')throw new Error("Telegram 409: Conflict: can't use getUpdates method while webhook is active");return method==='getUpdates'?updates:{message_id:123};});
 const server=app.listen(0,async()=>{const api=async(url,body,method='POST')=>{const r=await fetch(`http://localhost:${server.address().port}`+url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json();};try{
   const order=await api('/api/orders',{name:'Карта',amount:100,checkoutKey:'first'});
   await workers.tick();assert.equal(calls[0].method,'sendMessage');assert.match(calls[0].args.text,/Карты — Карта/);
@@ -23,5 +23,11 @@ assert.match(calls[0].args.reply_markup.inline_keyboard[0][0].text,/Перейт
   db.telegramOffset=500;process.env.BOT_TOKEN='999:new';updates=[];await workers.poll();
   assert.equal(db.telegramOffset,0);assert.equal(db.telegramBotId,'999');
   assert(db.orders.every(o=>!o.telegramMessageId));
-  console.log('PASS: Telegram message lifecycle, duplicate start, spoiler, reviews, topup ID, name is not doubled, bot switch');
+  // Бот на конструкторе (webhook): приём апдейтов на паузе, отправка сообщений работает.
+  updates='conflict';await workers.poll();
+  const pollsBefore=calls.filter(c=>c.method==='getUpdates').length;await workers.poll();
+  assert.equal(calls.filter(c=>c.method==='getUpdates').length,pollsBefore,'polling paused after 409');
+  const later=await api('/api/orders',{name:'Карта',amount:100,checkoutKey:'after-conflict'});
+  await workers.tick();assert.equal(calls.at(-1).method,'sendMessage');assert.match(calls.at(-1).args.text,new RegExp(later.id));
+  console.log('PASS: Telegram message lifecycle, duplicate start, spoiler, reviews, topup ID, name is not doubled, bot switch, constructor webhook');
 }catch(e){console.error(e);process.exitCode=1;}finally{server.close();}});

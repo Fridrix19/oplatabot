@@ -230,6 +230,7 @@ function attach(app,db,save,admin,transport){
   }catch(e){next(e);}});
   let ticking=false;
   async function tick(){if(ticking)return;ticking=true;try{
+    if(process.env.BOT_TOKEN)await switchBot();
     for(const o of db.orders){
       // Подстраховка на случай, если webhook Super Banking не дошёл.
       const sbWaiting=o.superbankingLinkId&&sbReady(o.paymentMethod)&&(pending(o)||['cancelled','expired'].includes(o.status))&&Date.now()-Date.parse(o.createdAt)<86400000;
@@ -252,8 +253,11 @@ function attach(app,db,save,admin,transport){
     }
     db.telegramBotId=botId;db.telegramOffset=0;await save();
   }
-  let polling=false;
-  async function poll(){if(polling||!process.env.BOT_TOKEN)return;polling=true;try{
+  // Если входящие сообщения бота обрабатывает конструктор (Botman и т.п.) через webhook,
+  // Telegram не отдаёт их нам (409 Conflict). Тогда сервер только отправляет сообщения
+  // о заказах, а приём апдейтов ставит на паузу. BOT_UPDATES=off выключает приём явно.
+  let polling=false,updatesPausedUntil=0;
+  async function poll(){if(polling||!process.env.BOT_TOKEN||process.env.BOT_UPDATES==='off'||Date.now()<updatesPausedUntil)return;polling=true;try{
     await switchBot();
     const updates=await telegram('getUpdates',{offset:db.telegramOffset||0,timeout:0});
     for(const u of updates||[]){const m=u.message;const match=m?.text?.match(/^\/start(?:@\w+)?(?:\s+pay_(ORD-[\w-]+))?$/);
@@ -264,7 +268,12 @@ function attach(app,db,save,admin,transport){
       }
       db.telegramOffset=u.update_id+1;await save();
     }
-  }catch(e){console.error('Telegram updates:',e.message);}finally{polling=false;}}
+  }catch(e){
+    if(/Telegram 409|webhook is active|terminated by other getUpdates/i.test(e.message)){
+      if(!updatesPausedUntil)console.log('Customer bot: incoming updates are handled by another service, only sending messages');
+      updatesPausedUntil=Date.now()+600000;
+    } else console.error('Telegram updates:',e.message);
+  }finally{polling=false;}}
   const operator=require('./operator-bot').attach(db,save);
   return Object.assign((run=fn=>fn())=>{const schedule=(fn,ms)=>{const loop=()=>run(fn).catch(e=>console.error('Order worker:',e.message)).finally(()=>setTimeout(loop,ms));setTimeout(loop,ms);};schedule(tick,10000);schedule(poll,7000);schedule(operator.tick,10000);schedule(operator.poll,7000);},{tick,poll});
 }
