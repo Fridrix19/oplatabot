@@ -102,8 +102,12 @@ function attach(app,db,save,admin,transport){
     try{
       const state=o.status;
       const payload={chat_id:o.userId,text:text(o),parse_mode:'HTML',reply_markup:keyboard(o)};
-      if(o.telegramMessageId)await telegram('editMessageText',{...payload,message_id:o.telegramMessageId});
-      else {const m=await telegram('sendMessage',payload);if(m)o.telegramMessageId=m.message_id;}
+      if(o.telegramMessageId){
+        // Сообщение могло остаться от прежнего бота (смена BOT_TOKEN) — тогда отправляем новое.
+        try{await telegram('editMessageText',{...payload,message_id:o.telegramMessageId});}
+        catch(e){if(!/message to edit not found|message can't be edited|MESSAGE_ID_INVALID|chat not found/i.test(e.message))throw e;o.previousTelegramMessageId=o.telegramMessageId;delete o.telegramMessageId;}
+      }
+      if(!o.telegramMessageId){const m=await telegram('sendMessage',payload);if(m)o.telegramMessageId=m.message_id;}
       o.notifiedStatus=state;await save();
     }catch(e){console.error('Order notification failed:',e.message);}finally{locks.delete(o.id);}
   }
@@ -237,8 +241,20 @@ function attach(app,db,save,admin,transport){
       if((o.telegramMessageId&&pending(o))||o.notifiedStatus!==o.status)await notify(o);
     }
   }finally{ticking=false;}}
+  // Смена покупательского бота: номера апдейтов и сообщений принадлежат прежнему боту.
+  // Без сброса новый бот не увидит /start, а правки старых сообщений будут падать.
+  async function switchBot(){
+    const botId=String(process.env.BOT_TOKEN||'').split(':')[0];
+    if(!botId||db.telegramBotId===botId)return;
+    if(db.telegramBotId){
+      for(const o of db.orders)if(o.telegramMessageId){o.previousTelegramMessageId=o.telegramMessageId;delete o.telegramMessageId;}
+      console.log('Customer bot changed: update offset and message ids reset');
+    }
+    db.telegramBotId=botId;db.telegramOffset=0;await save();
+  }
   let polling=false;
   async function poll(){if(polling||!process.env.BOT_TOKEN)return;polling=true;try{
+    await switchBot();
     const updates=await telegram('getUpdates',{offset:db.telegramOffset||0,timeout:0});
     for(const u of updates||[]){const m=u.message;const match=m?.text?.match(/^\/start(?:@\w+)?(?:\s+pay_(ORD-[\w-]+))?$/);
       if(match&&m.chat.type==='private'){

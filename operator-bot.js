@@ -66,6 +66,7 @@ function attach(db, save, transport, customerTransport) {
 
   async function tick() {
     if (!enabled()) return;
+    await switchBot();
     for (const o of db.orders) {
       // Receipt attached before delivery: send it after the customer got the order result.
       if (o.status === 'delivered' && (o.receiptFileId || o.receiptText) && !o.receiptSentAt && !o.receiptFailed && o.notifiedStatus === 'delivered') {
@@ -78,8 +79,11 @@ function attach(db, save, transport, customerTransport) {
       if (o.operatorNotifiedStatus === o.status) continue;
       const payload = {chat_id:admin(), text:card(o), reply_markup:{inline_keyboard:o.status === 'paid' && o.fulfillmentType === 'topup' ? [[{text:'Пополнено',callback_data:'done:'+o.id}]] : []}};
       try {
-        if (o.operatorMessageId) await api('editMessageText', {...payload, message_id:o.operatorMessageId});
-        else { const m = await api('sendMessage', payload); o.operatorMessageId = m.message_id; }
+        if (o.operatorMessageId) {
+          try { await api('editMessageText', {...payload, message_id:o.operatorMessageId}); }
+          catch (e) { if (!/message to edit not found|message can't be edited|MESSAGE_ID_INVALID/i.test(e.message)) throw e; delete o.operatorMessageId; }
+        }
+        if (!o.operatorMessageId) { const m = await api('sendMessage', payload); o.operatorMessageId = m.message_id; }
         o.operatorNotifiedStatus = o.status; await save();
         if (o.status === 'delivered') {
           if (!o.receiptFileId && !o.receiptText && !o.receiptPromptMessageId) {
@@ -128,8 +132,25 @@ function attach(db, save, transport, customerTransport) {
     return 'Код сохранён.';
   }
 
+  // Смена бота оператора (новый ORDERS_BOT_TOKEN): старые карточки заказов остались
+  // в чате прежнего бота, поэтому невыданные заказы отправляем заново.
+  async function switchBot() {
+    const botId = token().split(':')[0];
+    if (!botId || db.operatorBotId === botId) return;
+    if (db.operatorBotId) {
+      for (const o of db.orders) {
+        if (o.operatorMessageId) { o.previousOperatorMessageId = o.operatorMessageId; delete o.operatorMessageId; }
+        delete o.receiptPromptMessageId;
+        if (o.status === 'paid') delete o.operatorNotifiedStatus;
+      }
+      console.log('Operator bot changed: queue will be re-sent');
+    }
+    db.operatorBotId = botId; db.operatorOffset = 0; await save();
+  }
+
   async function poll() {
     if (!enabled()) return;
+    await switchBot();
     const updates = await api('getUpdates', {offset:db.operatorOffset || 0, timeout:0, allowed_updates:['message','callback_query']});
     for (const update of updates || []) {
       const callback = update.callback_query, message = callback?.message || update.message;

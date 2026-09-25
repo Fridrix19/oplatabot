@@ -34,5 +34,12 @@ const lastAdmin=()=>calls.filter(c=>c.method==='sendMessage').at(-1).args.text;
  updates=[{update_id:40,callback_query:{id:'cb',from:{id:42},data:'done:top',message:{message_id:top.operatorMessageId,chat:{id:42,type:'private'}}}}];await worker.poll();assert.equal(top.status,'delivered');assert.equal(top.code,null);
  await worker.tick();assert.equal(calls.filter(c=>c.method==='editMessageText').length,3);
  assert.equal(db.operatorOffset,41);
- console.log('PASS: receipts (text/photo, before/after delivery), paid-only operator queue, access control, reply delivery, duplicate protection, topup and message updates');
+  // Смена бота оператора: невыданные заказы уходят в новый чат заново.
+  db.orders.push({id:'fresh',status:'paid',productName:'Card',userId:'5'});await worker.tick();
+  const fresh=db.orders.find(o=>o.id==='fresh');assert(fresh.operatorMessageId);
+  process.env.ORDERS_BOT_TOKEN='777:other';const sentBefore=calls.filter(c=>c.method==='sendMessage').length;
+  await worker.tick();
+  assert.equal(db.operatorBotId,'777');assert.equal(db.operatorOffset,0);
+  assert(calls.filter(c=>c.method==='sendMessage').length>sentBefore,'paid order re-sent to the new operator bot');
+ console.log('PASS: receipts (text/photo, before/after delivery), paid-only operator queue, access control, reply delivery, duplicate protection, topup and message updates, bot switch');
 })().catch(e=>{console.error(e);process.exitCode=1;});

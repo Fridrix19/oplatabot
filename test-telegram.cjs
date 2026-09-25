@@ -19,5 +19,9 @@ assert.match(calls[0].args.reply_markup.inline_keyboard[0][0].text,/Перейт
   await workers.tick();
   const nitro=calls.filter(c=>c.method==='sendMessage'&&/Nitro Basic/.test(c.args.text||'')).at(-1).args.text;
   assert.equal(nitro.split('Discord Nitro').length-1,1,nitro);
-  console.log('PASS: Telegram message lifecycle, duplicate start, spoiler, reviews, topup ID, name is not doubled');
+  // Смена бота: сбрасываем счётчик апдейтов и отправляем свежие сообщения вместо правки старых.
+  db.telegramOffset=500;process.env.BOT_TOKEN='999:new';updates=[];await workers.poll();
+  assert.equal(db.telegramOffset,0);assert.equal(db.telegramBotId,'999');
+  assert(db.orders.every(o=>!o.telegramMessageId));
+  console.log('PASS: Telegram message lifecycle, duplicate start, spoiler, reviews, topup ID, name is not doubled, bot switch');
 }catch(e){console.error(e);process.exitCode=1;}finally{server.close();}});
