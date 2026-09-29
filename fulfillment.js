@@ -109,7 +109,11 @@ function attach(app,db,save,admin,transport){
       }
       if(!o.telegramMessageId){const m=await telegram('sendMessage',payload);if(m)o.telegramMessageId=m.message_id;}
       o.notifiedStatus=state;await save();
-    }catch(e){console.error('Order notification failed:',e.message);}finally{locks.delete(o.id);}
+    }catch(e){
+      // Покупатель недоступен (не запускал бота, заблокировал его, тестовый заказ) — повторять бессмысленно.
+      if(/chat not found|bot was blocked|user is deactivated|chat_id is empty/i.test(e.message)){o.notifiedStatus=o.status;o.notifyError=e.message;await save().catch(()=>{});console.warn(`Order ${o.id}: customer unreachable (${e.message})`);}
+      else console.error('Order notification failed:',e.message);
+    }finally{locks.delete(o.id);}
   }
   // Короткий номер заказа: его диктуют оператору и ищут в переписке.
   const ORDER_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
