@@ -19,6 +19,13 @@ assert.match(calls[0].args.reply_markup.inline_keyboard[0][0].text,/Перейт
   await workers.tick();
   const nitro=calls.filter(c=>c.method==='sendMessage'&&/Nitro Basic/.test(c.args.text||'')).at(-1).args.text;
   assert.equal(nitro.split('Discord Nitro').length-1,1,nitro);
+  // Обычный /start: приветствие и кнопки магазина, отзывов, канала и поддержки.
+  process.env.SUPPORT_URL='https://t.me/support_test';updates=[{update_id:2,message:{text:'/start',chat:{id:7,type:'private'},from:{id:7}}}];await workers.poll();
+  const hello=calls.filter(c=>c.method==='sendMessage'&&c.args.chat_id===7).at(-1).args;
+  assert.match(hello.text,/удачных покупок/);
+  assert.deepEqual(hello.reply_markup.inline_keyboard.map(r=>r.map(b=>b.text)),[['🛒 Открыть магазин'],['👀 Отзывы'],['✌️ Наш канал','✔️ Поддержка']]);
+  assert.equal(hello.reply_markup.inline_keyboard[0][0].web_app.url,'https://example.test');
+  assert.equal(hello.reply_markup.inline_keyboard[2][0].url,'https://t.me/metrapayru');assert.equal(hello.reply_markup.inline_keyboard[2][1].url,'https://t.me/support_test');
   // Смена бота: сбрасываем счётчик апдейтов и отправляем свежие сообщения вместо правки старых.
   db.telegramOffset=500;process.env.BOT_TOKEN='999:new';updates=[];await workers.poll();
   assert.equal(db.telegramOffset,0);assert.equal(db.telegramBotId,'999');
@@ -29,5 +36,5 @@ assert.match(calls[0].args.reply_markup.inline_keyboard[0][0].text,/Перейт
   assert.equal(calls.filter(c=>c.method==='getUpdates').length,pollsBefore,'polling paused after 409');
   const later=await api('/api/orders',{name:'Карта',amount:100,checkoutKey:'after-conflict'});
   await workers.tick();assert.equal(calls.at(-1).method,'sendMessage');assert.match(calls.at(-1).args.text,new RegExp(later.id));
-  console.log('PASS: Telegram message lifecycle, duplicate start, spoiler, reviews, topup ID, name is not doubled, bot switch, constructor webhook');
+  console.log('PASS: Telegram message lifecycle, duplicate start, spoiler, reviews, topup ID, name is not doubled, start buttons, bot switch, constructor webhook');
 }catch(e){console.error(e);process.exitCode=1;}finally{server.close();}});

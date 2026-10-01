@@ -9,6 +9,15 @@ function attach(app,db,save,admin,transport){
   const purchases=()=>`${base()}/?page=purchases`;
   // После оплаты возвращаем покупателя в чат с ботом: там лежит заказ, туда придёт код.
   // Ссылка без ?start=, чтобы бот не получал лишнее сообщение /start.
+  // Приветствие на /start и кнопки под ним. Тексты и ссылки меняются через env без правки кода.
+  const startText=()=>(process.env.START_TEXT||'Добро пожаловать в магазин цифровых товаров!\n\nПодарочные карты, пополнения и подписки — быстро и без лишних шагов.\n\nЖдём Вас, удачных покупок!').replace(/\\n/g,'\n');
+  function startKeyboard(){
+    const rows=[[{text:'🛒 Открыть магазин',web_app:{url:base()}}],[{text:'👀 Отзывы',url:reviews}]];
+    const channel=process.env.CHANNEL_URL||'https://t.me/metrapayru',support=process.env.SUPPORT_URL;
+    const links=[channel&&{text:'✌️ Наш канал',url:channel},support&&{text:'✔️ Поддержка',url:support}].filter(Boolean);
+    if(links.length)rows.push(links);
+    return {inline_keyboard:rows};
+  }
   const botChat=()=>process.env.BOT_USERNAME?`https://t.me/${process.env.BOT_USERNAME.replace(/^@/,'')}`:purchases();
   // "Discord Nitro" + "Discord Nitro — Nitro Basic" давало двойное название.
   function title(o){
@@ -268,7 +277,7 @@ function attach(app,db,save,admin,transport){
       if(match&&m.chat.type==='private'){
         const o=db.orders.find(o=>o.id===match[1]&&String(o.userId)===String(m.from.id));
         if(o){if(expire(o))await save();await notify(o);}
-        else await telegram('sendMessage',{chat_id:m.chat.id,text:'Откройте магазин или свои покупки.',reply_markup:{inline_keyboard:[[{text:'Открыть магазин',web_app:{url:base()}},{text:'Мои покупки',web_app:{url:purchases()}}]]}});
+        else await telegram('sendMessage',{chat_id:m.chat.id,text:startText(),reply_markup:startKeyboard()});
       }
       db.telegramOffset=u.update_id+1;await save();
     }
